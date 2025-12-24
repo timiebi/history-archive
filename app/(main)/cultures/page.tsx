@@ -1,7 +1,7 @@
 "use client";
 
-import { useState, useMemo } from "react";
-import { motion, AnimatePresence } from "framer-motion";
+import { AnimatePresence, motion } from "framer-motion";
+import { useMemo, useState } from "react";
 
 import { History } from "lucide-react";
 import { CultureOverlay } from "../map/culltureOverlay";
@@ -89,10 +89,10 @@ export default function CulturePage() {
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, scale: 0.9 }}
               onClick={() => setSelectedCulture(culture)}
-              className="group relative h-[400px] bg-stone-900 overflow-hidden border border-stone-800"
+              className="group relative h-100 bg-stone-900 overflow-hidden border border-stone-800"
             >
               <img src={culture.image} className="absolute inset-0 w-full h-full object-cover opacity-50 group-hover:opacity-100 group-hover:scale-110 transition-all duration-700" alt="" />
-              <div className="absolute inset-0 bg-gradient-to-t from-black to-transparent" />
+              <div className="absolute inset-0 bg-linear-to-t from-black to-transparent" />
               <div className="absolute inset-0 p-6 flex flex-col justify-end">
                 <h3 className="text-xl font-black uppercase italic tracking-tighter text-white">{culture.name}</h3>
                 <p className="text-[10px] font-mono text-orange-500">{culture.period}</p>

@@ -8,7 +8,7 @@ export default function AuthLayout({ children }: { children: React.ReactNode }) 
       {/* BACK TO HOME BUTTON */}
       <Link 
         href="/" 
-        className="absolute top-8 left-8 z-[100] flex items-center gap-2 group transition-colors"
+        className="absolute top-8 left-8 z-100 flex items-center gap-2 group transition-colors"
       >
         <div className="p-2 border border-stone-200 dark:border-stone-800 bg-white/50 dark:bg-stone-900/50 backdrop-blur-sm group-hover:border-orange-700 transition-colors">
           <ChevronLeft size={16} className="text-stone-600 dark:text-stone-400 group-hover:text-orange-700" />
