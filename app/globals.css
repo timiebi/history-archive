@@ -124,6 +124,35 @@
   body {
     @apply bg-background text-foreground antialiased;
   }
+
+  @media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+      animation-duration: 0.01ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.01ms !important;
+    }
+  }
+}
+
+@keyframes scroll-hint {
+  0%, 100% { opacity: 0.6; transform: translateY(0); }
+  50% { opacity: 1; transform: translateY(6px); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .animate-scroll-hint { animation: none; opacity: 0.7; }
+  .animate-scan-line { animation: none; opacity: 0.4; }
+}
+.animate-scroll-hint {
+  animation: scroll-hint 2s ease-in-out infinite;
+}
+@keyframes scan-line {
+  from { transform: translateY(0); }
+  to { transform: translateY(95vh); }
+}
+.animate-scan-line {
+  animation: scan-line 4s linear infinite;
 }
 
 .mask-africa-fade {

@@ -1,111 +1,51 @@
 
 "use client";
 
+import { useStories, useCategories } from "@/lib/api";
+import { storyToStoryDisplay, type StoryDisplay } from "@/lib/api/mappers";
 import { useState, useMemo } from "react";
 import { motion, AnimatePresence, useScroll, useTransform, useSpring } from "framer-motion";
-const STORIES = [
-  {
-    id: "mali-empire",
-    title: "The Golden Age of Mali",
-    category: "Kingdoms",
-    excerpt: "How Mansa Musa turned a desert trading post into the world's center of wealth and learning.",
-    image: "https://images.unsplash.com/photo-1590076215667-873d6f3731ad?q=80&w=1200",
-    year: "1324 AD"
-  },
-  {
-    id: "queen-aminas-walls",
-    title: "The Walls of Zazzau",
-    category: "Leadership",
-    excerpt: "Exploring the military brilliance of Queen Amina and the massive fortifications that redefined Hausaland.",
-    image: "https://images.unsplash.com/photo-1516026672322-bc52d61a55d5?q=80&w=1200",
-    year: "1576 AD"
-  },
-  {
-    id: "great-zimbabwe-architecture",
-    title: "The House of Stone",
-    category: "Architecture",
-    excerpt: "A study of the sophisticated mortarless masonry of the Shona people in the heart of Southern Africa.",
-    image: "https://images.unsplash.com/photo-1523733230460-120697af19be?q=80&w=1200",
-    year: "1200 AD"
-  },
-  {
-    id: "swahili-coast-trade",
-    title: "Monsoon Trade & Minarets",
-    category: "Maritime",
-    excerpt: "The rise of the Swahili city-states and their ancient trade networks connecting Africa to China and India.",
-    image: "https://images.unsplash.com/photo-1502602898657-3e91760cbb34?q=80&w=1200",
-    year: "900 AD"
-  },
-  {
-    id: "nubian-pyramids",
-    title: "The Black Pharaohs",
-    category: "Kingdoms",
-    excerpt: "The Kushite kings of Meroë who built more pyramids than their Egyptian neighbors to the north.",
-    image: "https://images.unsplash.com/photo-1503177119275-0aa32b3a9368?q=80&w=1200",
-    year: "700 BCE"
-  },
-  {
-    id: "benin-bronzes",
-    title: "The Bronze Records",
-    category: "Art",
-    excerpt: "The intricate casting techniques of the Benin Empire that captured centuries of court history in metal.",
-    image: "https://images.unsplash.com/photo-1582555172866-f73bb12a2ab3?q=80&w=1200",
-    year: "1440 AD"
-  },
-  {
-    id: "aksum-obelisks",
-    title: "The Empire of Aksum",
-    category: "Innovation",
-    excerpt: "How an ancient Ethiopian superpower became the first African kingdom to mint its own coinage.",
-    image: "https://images.unsplash.com/photo-1547471080-7cc2caa01a7e?q=80&w=1200",
-    year: "100 AD"
-  },
-  {
-    id: "ashanti-golden-stool",
-    title: "The Golden Stool",
-    category: "Spirituality",
-    excerpt: "The sacred symbol of unity and sovereignty that descended from the heavens to unify the Ashanti Empire.",
-    image: "https://images.unsplash.com/photo-1512100356956-c1226c996cd0?q=80&w=1200",
-    year: "1701 AD"
-  }
-];
-
-
-
-
-// Categories derived from the STORIES data
-const CATEGORIES = ["All", "Kingdoms", "Leadership", "Architecture", "Maritime", "Art", "Innovation", "Spirituality"];
 
 export default function StoriesPage() {
   const [activeCategory, setActiveCategory] = useState("All");
   const [searchQuery, setSearchQuery] = useState("");
   const [visibleCount, setVisibleCount] = useState(4);
 
-  // 1. SCROLL PROGRESS LOGIC
+  const { data: storiesData, isSuccess: storiesOk, isPending: storiesPending } = useStories();
+  const { data: categoriesData, isSuccess: categoriesOk } = useCategories();
+
+  const storiesList: StoryDisplay[] = useMemo(() => {
+    if (!storiesOk || !storiesData?.items?.length) return [];
+    return (storiesData.items as import("@/lib/api/types").Story[]).map(storyToStoryDisplay);
+  }, [storiesOk, storiesData?.items]);
+
+  const categoryList = useMemo(() => {
+    if (!categoriesOk || !categoriesData?.items?.length) return ["All"];
+    const names = (categoriesData.items as import("@/lib/api/types").Category[])
+      .map((c) => c.name)
+      .filter(Boolean);
+    return ["All", ...names];
+  }, [categoriesOk, categoriesData?.items]);
+
+  // Scroll progress (lighter spring for perf)
   const { scrollYProgress } = useScroll();
-  const scaleX = useSpring(scrollYProgress, {
-    stiffness: 100,
-    damping: 30,
-    restDelta: 0.001
-  });
+  const scaleX = useSpring(scrollYProgress, { stiffness: 80, damping: 35, restDelta: 0.002 });
+  const mapY = useTransform(scrollYProgress, [0, 0.5, 1], ["0%", "3%", "0%"]);
 
-  // Parallax scroll effect for the background map
-  const mapY = useTransform(scrollYProgress, [0, 1], ["-10%", "10%"]);
-
-  // Filter Logic
   const filteredStories = useMemo(() => {
-    return STORIES.filter((story) => {
+    return storiesList.filter((story) => {
       const matchesCategory = activeCategory === "All" || story.category === activeCategory;
-      const matchesSearch = story.title.toLowerCase().includes(searchQuery.toLowerCase()) || 
-                            story.excerpt.toLowerCase().includes(searchQuery.toLowerCase());
+      const matchesSearch =
+        story.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        (story.excerpt ?? "").toLowerCase().includes(searchQuery.toLowerCase());
       return matchesCategory && matchesSearch;
     });
-  }, [activeCategory, searchQuery]);
+  }, [activeCategory, searchQuery, storiesList]);
 
   const displayedStories = filteredStories.slice(0, visibleCount);
 
   return (
-    <main className="min-h-screen bg-[#fafaf9] dark:bg-[#0c0a09] transition-colors duration-500">
+    <main className="min-h-screen bg-[#fafaf9] dark:bg-[#0c0a09] transition-colors duration-300">
       
       {/* 2. READING PROGRESS BAR */}
       <motion.div 
@@ -127,9 +67,10 @@ export default function StoriesPage() {
       {/* HEADER & SEARCH */}
       <section className="relative z-10 px-6 pt-40 pb-12 max-w-7xl mx-auto">
         <div className="flex flex-col md:flex-row md:items-end justify-between gap-10">
-          <motion.div 
-            initial={{ opacity: 0, x: -20 }} 
+          <motion.div
+            initial={{ opacity: 0, x: -12 }}
             animate={{ opacity: 1, x: 0 }}
+            transition={{ duration: 0.25 }}
           >
             <span className="text-orange-800 dark:text-orange-600 font-black tracking-[0.4em] uppercase text-[10px] mb-4 block">
               The Oral & Written Record
@@ -147,13 +88,13 @@ export default function StoriesPage() {
               onChange={(e) => setSearchQuery(e.target.value)}
               className="w-full bg-transparent border-b border-stone-300 dark:border-stone-800 py-2 font-mono text-[10px] uppercase tracking-widest focus:border-orange-800 outline-none transition-colors"
             />
-            <div className="absolute bottom-0 left-0 h-0.5 bg-orange-800 w-0 group-focus-within:w-full transition-all duration-500" />
+            <div className="absolute bottom-0 left-0 h-0.5 bg-orange-800 w-0 group-focus-within:w-full transition-[width] duration-300" />
           </div>
         </div>
 
         {/* CATEGORY NAV */}
         <nav className="mt-20 flex flex-wrap gap-x-8 gap-y-4 border-b border-stone-200 dark:border-stone-800 pb-6">
-          {CATEGORIES.map((cat) => (
+          {categoryList.map((cat) => (
             <button
               key={cat}
               onClick={() => { setActiveCategory(cat); setVisibleCount(4); }}
@@ -172,13 +113,19 @@ export default function StoriesPage() {
 
       {/* STORIES GRID */}
       <section className="relative z-10 max-w-7xl mx-auto px-6 py-10">
+        {storiesPending ? (
+          <p className="text-center py-20 text-stone-500 font-mono text-sm uppercase tracking-widest">Loading stories…</p>
+        ) : filteredStories.length === 0 ? (
+          <p className="text-center py-20 text-stone-500 font-mono text-sm uppercase tracking-widest">No stories match your filter. Try another category or search.</p>
+        ) : (
+        <>
         <div className="grid gap-px bg-stone-200 dark:bg-stone-800 border border-stone-200 dark:border-stone-800">
           <AnimatePresence mode="popLayout">
             {displayedStories.map((story, index) => (
               <motion.a 
                 layout
                 key={story.id} 
-                href={`/stories/${story.id}`}
+                href={story.source === "EXTERNAL" && story.externalSource ? `/stories/external/${story.externalSource}/${encodeURIComponent(story.id)}` : `/stories/${story.id}`}
                 initial={{ opacity: 0, y: 20 }}
                 whileInView={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0, scale: 0.95 }}
@@ -186,9 +133,9 @@ export default function StoriesPage() {
                 className="group relative grid md:grid-cols-2 bg-[#fafaf9] dark:bg-[#0c0a09] overflow-hidden"
               >
                 {/* IMAGE WITH "SCANNING" EFFECT */}
-                <div className={`relative h-96 md:h-162.5overflow-hidden ${index % 2 !== 0 ? 'md:order-last' : ''}`}>
+                <div className={`relative h-96 md:h-162.5 overflow-hidden ${index % 2 !== 0 ? 'md:order-last' : ''}`}>
                   <img 
-                    src={story.image} 
+                    src={story.image || "https://images.unsplash.com/photo-1503177119275-0aa32b3a9368?q=80&w=800"} 
                     alt={story.title} 
                     className="w-full h-full object-cover transition-transform duration-1000 scale-110 group-hover:scale-100 grayscale-[0.6] group-hover:grayscale-0" 
                   />
@@ -204,12 +151,22 @@ export default function StoriesPage() {
 
                 {/* TEXT CONTENT */}
                 <div className="p-12 md:p-24 flex flex-col justify-center">
-                  <div className="flex items-center justify-between mb-10">
+                  <div className="flex items-center justify-between mb-10 flex-wrap gap-2">
                     <span className="text-[10px] font-black tracking-[0.3em] uppercase text-orange-800 bg-orange-800/5 px-2 py-1">
-                      {story.category}
+                      {story.category ?? ""}
                     </span>
+                    {story.source === "CONTRIBUTOR" && (
+                      <span className="text-[9px] font-black uppercase tracking-widest text-orange-700 border border-orange-700/50 px-2 py-0.5">
+                        Contributor
+                      </span>
+                    )}
+                    {story.externalSource && (
+                      <span className="text-[9px] font-black uppercase tracking-widest text-stone-600 dark:text-stone-400 border border-stone-400/50 px-2 py-0.5">
+                        {story.externalSource}
+                      </span>
+                    )}
                     <span className="text-stone-400 font-mono text-[10px] uppercase tracking-widest border-b border-stone-200 dark:border-stone-800">
-                      EST. {story.year}
+                      EST. {story.year ?? ""}
                     </span>
                   </div>
 
@@ -218,7 +175,7 @@ export default function StoriesPage() {
                   </h2>
 
                   <p className="text-stone-600 dark:text-stone-400 text-xl font-serif italic leading-relaxed mb-12 max-w-lg">
-                    {story.excerpt}
+                    {story.excerpt ?? ""}
                   </p>
 
                   <div className="mt-auto pt-10 border-t border-stone-100 dark:border-stone-900 flex items-center justify-between">
@@ -246,6 +203,8 @@ export default function StoriesPage() {
               </span>
             </button>
           </div>
+        )}
+        </>
         )}
       </section>
     </main>

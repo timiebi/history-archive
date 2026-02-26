@@ -2,21 +2,24 @@
 
 import { motion } from "framer-motion";
 
-// These "path" values are currently placeholders. 
-// You will need to adjust these coordinates based on your specific image.
-const EMPIRE_REGIONS = [
-  { id: "mali", name: "Mali Empire", path: "M140,220 L220,220 L200,300 L120,280 Z", color: "#c2410c" },
-  { id: "aksum", name: "Kingdom of Aksum", path: "M410,210 L460,230 L440,280 L390,260 Z", color: "#2563eb" },
-  { id: "zimbabwe", name: "Great Zimbabwe", path: "M360,480 L420,480 L420,550 L360,550 Z", color: "#059669" },
-];
+/** Minimal SVG path/color by region id (geometry only; list of regions comes from API via parent). */
+const REGION_STYLE: Record<string, { path: string; color: string }> = {
+  mali: { path: "M140,220 L220,220 L200,300 L120,280 Z", color: "#c2410c" },
+  aksum: { path: "M410,210 L460,230 L440,280 L390,260 Z", color: "#2563eb" },
+  zimbabwe: { path: "M360,480 L420,480 L420,550 L360,550 Z", color: "#059669" },
+};
+
+export type MapRegion = { id: string; name: string };
 
 interface MapProps {
+  regions: MapRegion[];
   activeNode: string | null;
   onHover: (id: string | null) => void;
-  onClick: (id: string) => void; // New prop for the overlay
+  onClick: (id: string) => void;
 }
 
-export function AfricaMap({ activeNode, onHover, onClick }: MapProps) {
+export function AfricaMap({ regions, activeNode, onHover, onClick }: MapProps) {
+  const regionsWithStyle = regions.map((r) => ({ ...r, ...REGION_STYLE[r.id] })).filter((r) => r.path != null);
   return (
     <div className="relative w-full h-full max-h-[80vh] flex items-center justify-center bg-stone-950/20 rounded-xl overflow-hidden border border-stone-800/50">
       
@@ -29,12 +32,12 @@ export function AfricaMap({ activeNode, onHover, onClick }: MapProps) {
 
       {/* 2. THE INTERACTIVE LAYER */}
       <svg 
-        viewBox="0 0 600 800" // Standard coordinate space
+        viewBox="0 0 600 800"
         className="absolute inset-0 w-full h-full z-10"
         fill="none" 
         xmlns="http://www.w3.org/2000/svg"
       >
-        {EMPIRE_REGIONS.map((region) => (
+        {regionsWithStyle.map((region) => (
           <motion.path
             key={region.id}
             d={region.path}

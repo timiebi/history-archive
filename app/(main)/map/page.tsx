@@ -1,5 +1,7 @@
 "use client";
 
+import { useCountries } from "@/lib/api";
+import { countryToCultureDisplay, type CultureDisplay } from "@/lib/api/mappers";
 import { Compass, Search } from "lucide-react";
 import { useMemo, useState } from "react";
 import { CultureOverlay } from "./culltureOverlay";
@@ -10,20 +12,21 @@ export default function MapPage() {
   const [selectedEmpire, setSelectedEmpire] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
 
-  const EMPIRES = [
-    { id: "mali", name: "Mali Empire", region: "West Africa", period: "1230 – 1670", capital: "Niani", language: "Mandinka", desc: "The wealthiest empire in West African history." },
-    { id: "aksum", name: "Kingdom of Aksum", region: "East Africa", period: "100 – 940 AD", capital: "Aksum", language: "Ge'ez", desc: "A major naval and trading power linking Rome and India." },
-    { id: "zimbabwe", name: "Great Zimbabwe", region: "Southern Africa", period: "11th – 15th Century", capital: "Great Zimbabwe", language: "Shona", desc: "A sophisticated stone city capital of a vast trading empire." }
-  ];
+  const { data: countriesData, isSuccess: countriesOk, isPending: countriesPending } = useCountries();
+  const empiresList = useMemo(() => {
+    if (!countriesOk || !countriesData?.items?.length) return [];
+    return (countriesData.items as import("@/lib/api/types").Country[]).map(countryToCultureDisplay);
+  }, [countriesOk, countriesData?.items]);
 
   const filteredEmpires = useMemo(() => {
-    return EMPIRES.filter(emp => 
-      emp.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      emp.region.toLowerCase().includes(searchQuery.toLowerCase())
+    return empiresList.filter(
+      (emp) =>
+        emp.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        (emp.region ?? "").toLowerCase().includes(searchQuery.toLowerCase())
     );
-  }, [searchQuery]);
+  }, [searchQuery, empiresList]);
 
-  const selectedData = EMPIRES.find(e => e.id === selectedEmpire);
+  const selectedData = empiresList.find((e) => e.id === selectedEmpire);
 
   return (
     /* Change 1: Dynamic Background and Text */
@@ -63,6 +66,12 @@ export default function MapPage() {
           </div>
 
           <div className="flex-1 overflow-y-auto p-8 pt-4 space-y-10">
+            {countriesPending ? (
+              <p className="text-stone-500 font-mono text-[10px] uppercase tracking-widest">Loading…</p>
+            ) : filteredEmpires.length === 0 ? (
+              <p className="text-stone-500 font-mono text-[10px] uppercase tracking-widest">No regions loaded yet.</p>
+            ) : (
+            <>
             {filteredEmpires.map((emp) => (
               <div 
                 key={emp.id}
@@ -80,6 +89,8 @@ export default function MapPage() {
                 <div className={`h-px mt-2 transition-all duration-500 ${selectedEmpire === emp.id ? 'w-full bg-orange-700' : 'w-0 group-hover:w-1/2 bg-stone-200 dark:bg-stone-800'}`} />
               </div>
             ))}
+            </>
+            )}
           </div>
         </aside>
 
@@ -87,6 +98,7 @@ export default function MapPage() {
         <section className="flex-1 relative flex items-center justify-center bg-stone-100 dark:bg-[#12100e]">
           <div className="w-full h-full p-12">
              <AfricaMap 
+                regions={empiresList.map((e) => ({ id: e.id, name: e.name }))}
                 activeNode={hoveredEmpire || selectedEmpire} 
                 onHover={setHoveredEmpire} 
                 onClick={(id) => setSelectedEmpire(id)} 

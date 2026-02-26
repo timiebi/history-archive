@@ -1,4 +1,12 @@
+"use client";
+
+import Link from "next/link";
+import { useContributors } from "@/lib/api";
+
 export function ContributionSection() {
+  const { data, isSuccess } = useContributors();
+  const contributors = (data?.items ?? []) as { id: string; name: string; email?: string }[];
+
   return (
     <section className="relative py-32 bg-[#0c0a09] text-stone-100 overflow-hidden">
       {/* Background Texture - Subtle African Motif */}
@@ -19,15 +27,43 @@ export function ContributionSection() {
           storytellers to contribute their verified records to the archive.
         </p>
 
-        <div className="flex flex-wrap justify-center gap-8">
-          <button className="relative cursor-pointer px-10 py-5 bg-transparent border border-stone-700 hover:border-orange-800 transition-all group overflow-hidden">
+        <div className="flex flex-wrap justify-center gap-8 mb-16">
+          <Link
+            href="/auth/signup?role=contributor"
+            className="relative cursor-pointer inline-block px-10 py-5 bg-transparent border border-stone-700 hover:border-orange-800 transition-all group overflow-hidden"
+          >
             <span className="relative z-10 text-xs font-black uppercase tracking-[0.3em]">Become a Contributor</span>
             <div className="absolute inset-0 bg-stone-100 translate-y-full group-hover:translate-y-0 transition-transform duration-300" />
             <span className="absolute inset-0 z-20 flex items-center justify-center text-stone-900 text-xs font-black uppercase tracking-[0.3em] translate-y-full group-hover:translate-y-0 transition-transform duration-300">
               Apply Now
             </span>
-          </button>
+          </Link>
+          <Link
+            href="/contribute"
+            className="relative cursor-pointer inline-block px-10 py-5 bg-transparent border border-orange-800 text-orange-800 hover:bg-orange-800 hover:text-stone-900 transition-all text-xs font-black uppercase tracking-[0.3em]"
+          >
+            Submit a Story
+          </Link>
         </div>
+
+        {isSuccess && contributors.length > 0 && (
+          <div className="pt-12 border-t border-stone-800">
+            <p className="text-[10px] font-black uppercase tracking-[0.4em] text-stone-500 mb-6">Our contributors</p>
+            <div className="flex flex-wrap justify-center gap-4">
+              {contributors.slice(0, 12).map((c) => (
+                <span
+                  key={c.id}
+                  className="px-4 py-2 border border-stone-700 text-stone-300 text-[10px] font-mono uppercase tracking-wider"
+                >
+                  {c.name}
+                </span>
+              ))}
+              {contributors.length > 12 && (
+                <span className="px-4 py-2 text-stone-500 text-[10px] font-mono">+{contributors.length - 12} more</span>
+              )}
+            </div>
+          </div>
+        )}
       </div>
     </section>
   );

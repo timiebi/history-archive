@@ -4,7 +4,8 @@ import { motion, useMotionValue, useSpring, useTransform } from "framer-motion";
 import { useState } from "react";
 import Link from "next/link";
 
-const ARTIFACTS = [
+const artifacts: { id: string; name: string; origin: string; material: string; year: string; image: string; hdImage: string; description: string; dimensions: string; culture: string; location: string; currentLocation: string }[] = [ /* data from API */
+  /*
  {
     id: "benin-head",
     name: "Commemorative Head of an Oba",
@@ -47,7 +48,7 @@ const ARTIFACTS = [
     location: "Mapungubwe Hill, South Africa",
     currentLocation: "University of Pretoria, South Africa"
   }
- 
+  */
 ];
 
 function ArtifactCard({ artifact }: { artifact: any }) {
@@ -137,11 +138,17 @@ export default function ArtifactsPage() {
       {/* Artifacts Grid */}
       <section className="relative z-10 max-w-7xl mx-auto px-6 py-20">
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-px bg-stone-200 dark:bg-stone-800 border border-stone-200 dark:border-stone-800">
-          {ARTIFACTS.map((artifact) => (
-            <div key={artifact.id} className="bg-[#fafaf9] dark:bg-[#0c0a09] p-4">
-                <ArtifactCard artifact={artifact} />
+          {artifacts.length === 0 ? (
+            <div className="col-span-full bg-[#fafaf9] dark:bg-[#0c0a09] p-20 text-center">
+              <p className="font-mono text-sm uppercase tracking-widest text-stone-500">No artifacts in the vault yet.</p>
             </div>
-          ))}
+          ) : (
+            artifacts.map((artifact) => (
+              <div key={artifact.id} className="bg-[#fafaf9] dark:bg-[#0c0a09] p-4">
+                <ArtifactCard artifact={artifact} />
+              </div>
+            ))
+          )}
         </div>
       </section>
     </main>

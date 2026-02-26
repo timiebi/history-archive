@@ -4,55 +4,12 @@ import { motion } from "framer-motion";
 import { ArrowLeft, Layers, ZoomIn, ZoomOut } from "lucide-react";
 import Link from "next/link";
 import { use, useRef, useState } from "react";
-
-const ARTIFACTS = [
-  {
-    id: "benin-head",
-    name: "Commemorative Head of an Oba",
-    origin: "Kingdom of Benin, Nigeria",
-    material: "Bronze",
-    year: "Circa 16th Century",
-    image: "https://images.unsplash.com/photo-1582555172866-f73bb12a2ab3?q=80&w=1200",
-    hdImage: "https://images.unsplash.com/photo-1582555172866-f73bb12a2ab3?q=80&w=2000",
-    description: "A masterpiece of the cire perdue (lost-wax) technique, this commemorative head (Uhunmwun Elao) represents the idealized features of a deceased Oba. The high, beaded collar and reticulated headdress signify the supreme spiritual authority of Edo royalty.",
-    dimensions: "H: 50 cm, W: 25 cm",
-    culture: "Edo People",
-    location: "Benin City, Nigeria",
-    currentLocation: "British Museum, London"
-  },
-  {
-    id: "lydenburg-mask",
-    name: "Lydenburg Head",
-    origin: "Mpumalanga, South Africa",
-    material: "Terracotta (fired clay)",
-    year: "Circa 500 - 800 AD",
-    image: "https://images.unsplash.com/photo-1516026672322-bc52d61a55d5?q=80&w=1200",
-    hdImage: "https://images.unsplash.com/photo-1516026672322-bc52d61a55d5?q=80&w=2000",
-    description: "One of the oldest known African ritual sculptures south of the equator. The synthesis of human and zoomorphic features suggests their use in early Iron Age initiation rites or ancestral representations.",
-    dimensions: "H: 30 cm, W: 20 cm",
-    culture: "Early Iron Age Bantu-speakers",
-    location: "Lydenburg Valley, South Africa",
-    currentLocation: "Iziko South African Museum, Cape Town"
-  },
-  {
-    id: "golden-rhino",
-    name: "Golden Rhinoceros of Mapungubwe",
-    origin: "Kingdom of Mapungubwe, South Africa",
-    material: "Gold foil over wood",
-    year: "Circa 1075 - 1290 AD",
-    image: "https://images.unsplash.com/photo-1547471080-7cc2caa01a7e?q=80&w=1200",
-    hdImage: "https://images.unsplash.com/photo-1547471080-7cc2caa01a7e?q=80&w=2000",
-    description: "Recovered from the royal 'Gold Grave', this rhinoceros confirms Mapungubwe as a nexus of a global trade network. It symbolizes the King’s sovereignty and the sophisticated metallurgy of the Shona ancestors.",
-    dimensions: "H: 14 cm, L: 17 cm",
-    culture: "Proto-Shona",
-    location: "Mapungubwe Hill, South Africa",
-    currentLocation: "University of Pretoria, South Africa"
-  }
-];
+import { useArtifacts } from "@/lib/api";
 
 export default function ArtifactDetailPage({ params }: { params: Promise<{ id: string }> }) {
-  const resolvedParams = use(params);
-  const artifact = ARTIFACTS.find(a => a.id === resolvedParams.id);
+  const { id } = use(params);
+  const { data: artifacts = [], isPending } = useArtifacts();
+  const artifact = artifacts.find((a) => a.id === id) ?? null;
 
   const [zoomLevel, setZoomLevel] = useState(1);
   const [position, setPosition] = useState({ x: 0, y: 0 });
@@ -60,7 +17,20 @@ export default function ArtifactDetailPage({ params }: { params: Promise<{ id: s
   const [isLightTable, setIsLightTable] = useState(false);
   const lastPosition = useRef({ x: 0, y: 0 });
 
-  if (!artifact) return <div className="h-screen bg-black text-white flex items-center justify-center font-black">404 // NOT_FOUND</div>;
+  if (isPending) {
+    return (
+      <div className="h-screen bg-[#fafaf9] dark:bg-[#0c0a09] flex items-center justify-center">
+        <p className="font-mono text-sm uppercase tracking-widest text-stone-500">Loading artifact…</p>
+      </div>
+    );
+  }
+  if (!artifact) {
+    return (
+      <div className="h-screen bg-[#fafaf9] dark:bg-[#0c0a09] flex items-center justify-center">
+        <p className="font-mono text-sm uppercase tracking-widest text-stone-500">Artifact not found.</p>
+      </div>
+    );
+  }
 
   const handleMouseDown = (e: React.MouseEvent) => {
     if (zoomLevel > 1) {
@@ -121,7 +91,7 @@ export default function ArtifactDetailPage({ params }: { params: Promise<{ id: s
             style={{ cursor: zoomLevel > 1 ? (isDragging ? 'grabbing' : 'grab') : 'crosshair' }}
           >
             <img
-              src={artifact.hdImage || artifact.image}
+              src={artifact.hdImage ?? artifact.image ?? ""}
               alt={artifact.name}
               className={`object-contain w-full h-full p-12 pointer-events-none select-none transition-all duration-700 ${isLightTable ? "drop-shadow-2xl brightness-110 grayscale-0" : "grayscale-[0.2] dark:grayscale-0"}`}
             />
@@ -152,10 +122,10 @@ export default function ArtifactDetailPage({ params }: { params: Promise<{ id: s
 
             <div className="grid grid-cols-2 gap-x-12 gap-y-8 pt-12 border-t border-stone-200 dark:border-stone-800">
               {[
-                { label: "Origin", value: artifact.origin },
-                { label: "Material", value: artifact.material },
-                { label: "Era", value: artifact.year },
-                { label: "Location", value: artifact.currentLocation }
+                { label: "Origin", value: artifact.origin ?? "" },
+                { label: "Material", value: artifact.material ?? "" },
+                { label: "Era", value: artifact.year ?? "" },
+                { label: "Location", value: artifact.currentLocation ?? artifact.location ?? "" }
               ].map((spec, i) => (
                 <div key={i}>
                   <dt className="text-[9px] font-black uppercase tracking-widest text-stone-400 mb-1">{spec.label}_</dt>
@@ -172,13 +142,13 @@ export default function ArtifactDetailPage({ params }: { params: Promise<{ id: s
         <div className="max-w-7xl mx-auto">
           <h2 className="text-4xl font-black uppercase italic tracking-tighter mb-16">Related <span className="text-stone-400">Findings.</span></h2>
           <div className="flex gap-8 overflow-x-auto no-scrollbar pb-12">
-            {ARTIFACTS.filter(a => a.id !== artifact.id).map((related) => (
+            {artifacts.filter((a) => a.id !== artifact.id).map((related) => (
               <Link key={related.id} href={`/artifacts/${related.id}`} className="min-w-100 group">
                 <div className="aspect-4/5 bg-stone-200 dark:bg-stone-950 overflow-hidden mb-6 relative">
-                  <img src={related.image} alt="" className="w-full h-full object-cover grayscale group-hover:grayscale-0 transition-all duration-700" />
+                  <img src={related.image ?? ""} alt="" className="w-full h-full object-cover grayscale group-hover:grayscale-0 transition-all duration-700" />
                 </div>
                 <h3 className="text-lg font-black uppercase italic tracking-tighter">{related.name}</h3>
-                <p className="text-[9px] font-black uppercase tracking-[0.2em] text-stone-400">{related.origin}</p>
+                <p className="text-[9px] font-black uppercase tracking-[0.2em] text-stone-400">{related.origin ?? ""}</p>
               </Link>
             ))}
           </div>

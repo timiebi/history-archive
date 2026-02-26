@@ -49,7 +49,7 @@ export function CultureOverlay({ data, onCloseAction }: { data: any; onCloseActi
                  <span className="text-[9px] font-black uppercase tracking-widest text-stone-600">Briefing</span>
                </div>
                <p className="text-stone-400 font-serif italic leading-relaxed text-lg">
-                 {data.desc}
+                 {data.desc ?? (data as { description?: string }).description ?? ""}
                </p>
             </div>
           </div>

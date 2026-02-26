@@ -34,5 +34,8 @@ You can check out [the Next.js GitHub repository](https://github.com/vercel/next
 The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
 
 Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
-# history-archive
-# history-archive
+
+## Contributor experience
+
+- **Current:** Contributors (and admins) get a **Submit story** link in the navbar → `/contribute`, where they can submit a new story (category, title, content, image URL, source URL). Signup with role CONTRIBUTOR is available via `/auth/signup?role=contributor`. There is no dedicated contributor dashboard or "My stories" screen yet.
+- **Future:** A contributor dashboard or "My stories" page could list the current user's submissions and their status; this would require a backend endpoint (e.g. `GET /stories?authorId=me` or `GET /users/me/stories`) and a new frontend route.

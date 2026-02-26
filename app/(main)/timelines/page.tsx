@@ -1,53 +1,55 @@
 "use client";
 
 import { motion, useScroll, useSpring, useInView, AnimatePresence } from "framer-motion";
-import { useRef, useState, useEffect } from "react";
-import { Map as MapIcon, Globe, X } from "lucide-react";
+import { useRef, useState, useEffect, useMemo } from "react";
+import { Globe, X } from "lucide-react";
+import { useCountries, useTimelines } from "@/lib/api";
+import type { Country, Timeline } from "@/lib/api/types";
 
-const KINGDOMS = [
-  {
-    id: "aksum",
-    name: "Kingdom of Aksum",
-    period: "100 AD",
-    fullPeriod: "100 AD – 940 AD",
-    region: "Ethiopia / Eritrea",
-    description: "A major naval and trading power, Aksum served as a link between the Roman Empire and ancient India. They were among the first to adopt Christianity and develop their own coinage.",
-    coordinates: "14.12° N, 38.72° E",
-    mapUrl: "https://images.unsplash.com/photo-1526778548025-fa2f459cd5c1?q=80&w=1200", // Representative landscape
-  },
-  {
-    id: "mali",
-    name: "Mali Empire",
-    period: "1230 AD",
-    fullPeriod: "1230 AD – 1670 AD",
-    region: "West Africa",
-    description: "Famous for its immense wealth in gold and the legendary Mansa Musa. Timbuktu became a global center of Islamic learning and scholarship.",
-    coordinates: "12.63° N, 8.00° W",
-    mapUrl: "https://images.unsplash.com/photo-1508248467877-926872220b4a?q=80&w=1200",
-  },
-  {
-    id: "benin",
-    name: "Kingdom of Benin",
-    period: "1440 AD",
-    fullPeriod: "1180 AD – 1897 AD",
-    region: "Southern Nigeria",
-    description: "Renowned for its sophisticated political system and world-famous bronze and ivory artworks produced by royal guilds.",
-    coordinates: "6.33° N, 5.62° E",
-    mapUrl: "https://images.unsplash.com/photo-1590272456521-1bbe160a18ce?q=80&w=1200",
-  },
-  {
-    id: "songhai",
-    name: "Songhai Empire",
-    period: "1464 AD",
-    fullPeriod: "1464 AD – 1591 AD",
-    region: "Sahel Region",
-    description: "At its peak, it was one of the largest states in African history. Known for its administrative efficiency and control of the trans-Saharan trade routes.",
-    coordinates: "16.27° N, 0.04° E",
-    mapUrl: "https://images.unsplash.com/photo-1509114397022-ed747cca3f65?q=80&w=1200",
-  }
-];
+type KingdomRowData = {
+  id: string;
+  name: string;
+  period: string;
+  fullPeriod: string;
+  region: string;
+  description: string;
+  coordinates: string;
+  mapUrl: string;
+};
 
-function KingdomRow({ kingdom, index, setActive, showMap }: any) {
+function timelineToKingdom(t: Timeline): KingdomRowData {
+  const start = t.startYear != null ? (t.startYear < 0 ? `${Math.abs(t.startYear)} BC` : `${t.startYear} AD`) : "—";
+  const end = t.endYear != null ? (t.endYear < 0 ? `${Math.abs(t.endYear)} BC` : `${t.endYear} AD`) : "—";
+  const fullPeriod = `${start} – ${end}`;
+  return {
+    id: t.id,
+    name: t.name,
+    period: start,
+    fullPeriod,
+    region: "—",
+    description: (t.description as string) ?? "No description.",
+    coordinates: "—",
+    mapUrl: "",
+  };
+}
+
+function countryToKingdom(c: Country): KingdomRowData {
+  const start = c.startYear != null ? `${c.startYear} AD` : "—";
+  const end = c.endYear != null ? `${c.endYear} AD` : "—";
+  const fullPeriod = `${start} – ${end}`;
+  return {
+    id: c.id,
+    name: c.name,
+    period: start,
+    fullPeriod,
+    region: c.region ?? "—",
+    description: (c.description as string) ?? "No description.",
+    coordinates: "—",
+    mapUrl: (c.image as string) ?? "",
+  };
+}
+
+function KingdomRow({ kingdom, index, setActive, showMap }: { kingdom: KingdomRowData; index: number; setActive: (id: string) => void; showMap: (k: KingdomRowData) => void }) {
   const ref = useRef(null);
   const isInView = useInView(ref, { amount: 0.5 });
   const isEven = index % 2 === 0;
@@ -100,9 +102,20 @@ function KingdomRow({ kingdom, index, setActive, showMap }: any) {
 
 export default function TimelinePage() {
   const containerRef = useRef(null);
-  const [activeId, setActiveId] = useState(KINGDOMS[0].id);
-  const [selectedMap, setSelectedMap] = useState<any>(null);
-  
+  const { data: timelinesData, isSuccess: timelinesOk, isPending: timelinesPending } = useTimelines();
+  const { data: countriesData, isSuccess: countriesOk, isPending: countriesPending } = useCountries();
+  const kingdoms = useMemo(() => {
+    if (timelinesOk && timelinesData?.items?.length) return (timelinesData.items as Timeline[]).map(timelineToKingdom);
+    if (countriesOk && countriesData?.items?.length) return (countriesData.items as Country[]).map(countryToKingdom);
+    return [];
+  }, [timelinesOk, timelinesData?.items, countriesOk, countriesData?.items]);
+  const pending = timelinesPending || countriesPending;
+
+  const [activeId, setActiveId] = useState<string | null>(kingdoms[0]?.id ?? null);
+  const [selectedMap, setSelectedMap] = useState<KingdomRowData | null>(null);
+
+  useEffect(() => { if (kingdoms.length && !activeId) setActiveId(kingdoms[0]!.id); }, [kingdoms, activeId]);
+
   const { scrollYProgress } = useScroll({ target: containerRef, offset: ["start start", "end end"] });
   const scaleY = useSpring(scrollYProgress, { stiffness: 100, damping: 30 });
 
@@ -125,7 +138,7 @@ export default function TimelinePage() {
             </button>
             <div className="grid md:grid-cols-2 gap-12 max-w-7xl items-center">
               <div className="relative aspect-square border border-stone-200 dark:border-stone-800 bg-stone-100 dark:bg-stone-900 p-4">
-                 <img src={selectedMap.mapUrl} alt="Historical Map" className="w-full h-full object-cover grayscale brightness-50" />
+                 {selectedMap.mapUrl ? <img src={selectedMap.mapUrl} alt="Historical Map" className="w-full h-full object-cover grayscale brightness-50" /> : <div className="w-full h-full bg-stone-200 dark:bg-stone-800" />}
                  <div className="absolute inset-0 flex items-center justify-center">
                     <div className="text-center">
                       <p className="text-orange-700 font-mono text-xs tracking-widest mb-2">TARGET_COORDINATES</p>
@@ -138,9 +151,7 @@ export default function TimelinePage() {
                 <h2 className="text-6xl font-black uppercase italic tracking-tighter dark:text-white leading-none">{selectedMap.name}</h2>
                 <p className="text-stone-500 dark:text-stone-400 text-lg font-serif italic leading-relaxed">{selectedMap.region}</p>
                 <div className="p-6 border-l-2 border-orange-700 bg-stone-50 dark:bg-stone-900/50">
-                   <p className="text-xs uppercase font-mono text-stone-500 leading-loose">
-                     Site remains significant in the 21st century. Archeological evidence suggests a footprint spanning over {selectedMap.id === 'songhai' ? '1.4 million' : '800,000'} square kilometers.
-                   </p>
+                   <p className="text-xs uppercase font-mono text-stone-500 leading-loose">{selectedMap.description}</p>
                 </div>
               </div>
             </div>
@@ -150,7 +161,7 @@ export default function TimelinePage() {
 
       {/* RIGHT SIDE NAVIGATOR */}
       <nav className="fixed right-8 top-1/2 -translate-y-1/2 z-50 flex flex-col gap-8 border-l border-stone-200 dark:border-stone-800 pl-6 py-10">
-        {KINGDOMS.map((k) => (
+        {kingdoms.map((k) => (
           <button key={k.id} onClick={() => document.getElementById(k.id)?.scrollIntoView({ behavior: "smooth" })} className="group flex flex-col items-start text-left transition-all">
             <span className={`text-[9px] font-mono tracking-tighter transition-colors ${activeId === k.id ? "text-orange-700" : "text-stone-400"}`}>{k.period}</span>
             <span className={`text-[10px] font-black uppercase tracking-widest transition-all ${activeId === k.id ? "text-stone-900 dark:text-white translate-x-2" : "text-stone-300 dark:text-stone-700"}`}>{k.id}</span>
@@ -167,9 +178,21 @@ export default function TimelinePage() {
           </h1>
         </div>
 
-        {KINGDOMS.map((kingdom, i) => (
+        {pending && kingdoms.length === 0 ? (
+          <div className="h-screen flex items-center justify-center">
+            <p className="font-mono text-[10px] uppercase tracking-widest text-stone-500">Loading…</p>
+          </div>
+        ) : kingdoms.length === 0 ? (
+          <div className="h-screen flex items-center justify-center">
+            <p className="font-mono text-[10px] uppercase tracking-widest text-stone-500">No timelines yet.</p>
+          </div>
+        ) : (
+        <>
+        {kingdoms.map((kingdom, i) => (
           <KingdomRow key={kingdom.id} kingdom={kingdom} index={i} setActive={setActiveId} showMap={setSelectedMap} />
         ))}
+        </>
+        )}
       </section>
     </main>
   );

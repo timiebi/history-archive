@@ -5,25 +5,31 @@ import { ArrowRight, Book, Clock, Diamond, Search, Sparkles } from "lucide-react
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useMemo, useState } from "react";
+import { useStories, useCountries } from "@/lib/api";
 
-// 1. Unified Search Logic: Combines all your hardcoded data
-const ALL_RECORDS = [
-  // From Artifacts
-  { id: "benin-head", title: "Commemorative Head", type: "Object", category: "Artifact", href: "/artifacts/benin-head" },
-  { id: "golden-rhino", title: "Golden Rhinoceros", type: "Object", category: "Artifact", href: "/artifacts/golden-rhino" },
-  { id: "lydenburg-mask", title: "Lydenburg Head", type: "Object", category: "Artifact", href: "/artifacts/lydenburg-mask" },
-  // From Kingdoms
-  { id: "aksum", title: "Kingdom of Aksum", type: "Era", category: "Timeline", href: "/timeline#aksum" },
-  { id: "mali", title: "Mali Empire", type: "Era", category: "Timeline", href: "/timeline#mali" },
-  { id: "songhai", title: "Songhai Empire", type: "Era", category: "Timeline", href: "/timeline#songhai" },
-  // From Library
-  { id: "tarikh-al-sudan", title: "Tarikh al-Sudan", type: "Folio", category: "Library", href: "/library" },
-  { id: "kebra-nagast", title: "The Kebra Nagast", type: "Folio", category: "Library", href: "/library" },
-];
+type SearchRecord = { id: string; title: string; type: string; category: string; href: string };
 
 export function SearchOverlay() {
   const [isOpen, setIsOpen] = useState(false);
   const [query, setQuery] = useState("");
+
+  const { data: storiesData, isSuccess: storiesOk } = useStories();
+  const { data: countriesData, isSuccess: countriesOk } = useCountries();
+
+  const allRecords = useMemo<SearchRecord[]>(() => {
+    const list: SearchRecord[] = [];
+    if (storiesOk && storiesData?.items?.length) {
+      (storiesData.items as { id: string; title?: string }[]).forEach((s) => {
+        list.push({ id: s.id, title: s.title ?? "Story", type: "Story", category: "Stories", href: `/stories/${s.id}` });
+      });
+    }
+    if (countriesOk && countriesData?.items?.length) {
+      (countriesData.items as { id: string; name: string }[]).forEach((c) => {
+        list.push({ id: c.id, title: c.name, type: "Era", category: "Cultures", href: `/cultures` });
+      });
+    }
+    return list;
+  }, [storiesOk, storiesData?.items, countriesOk, countriesData?.items]);
 
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -37,14 +43,13 @@ export function SearchOverlay() {
     return () => window.removeEventListener("keydown", handleKeyDown);
   }, []);
 
-  // Filter logic
   const filteredResults = useMemo(() => {
-    if (!query) return ALL_RECORDS.slice(0, 4); // Default suggestions
-    return ALL_RECORDS.filter(item => 
+    if (!query) return allRecords.slice(0, 6);
+    return allRecords.filter(item => 
       item.title.toLowerCase().includes(query.toLowerCase()) || 
       item.category.toLowerCase().includes(query.toLowerCase())
     );
-  }, [query]);
+  }, [query, allRecords]);
 
   return (
     <>
@@ -98,9 +103,9 @@ export function SearchOverlay() {
                       >
                         <div className="flex items-center gap-5">
                           <div className="w-10 h-10 bg-stone-100 dark:bg-stone-900 flex items-center justify-center border border-stone-200 dark:border-stone-800 group-hover:border-orange-800 transition-colors">
-                             {item.type === 'Object' && <Diamond size={16} className="text-stone-400 group-hover:text-orange-800" />}
-                             {item.type === 'Era' && <Clock size={16} className="text-stone-400 group-hover:text-orange-800" />}
-                             {item.type === 'Folio' && <Book size={16} className="text-stone-400 group-hover:text-orange-800" />}
+                             {item.type === "Object" && <Diamond size={16} className="text-stone-400 group-hover:text-orange-800" />}
+                             {(item.type === "Era" || item.type === "Story") && <Clock size={16} className="text-stone-400 group-hover:text-orange-800" />}
+                             {item.type === "Folio" && <Book size={16} className="text-stone-400 group-hover:text-orange-800" />}
                           </div>
                           <div>
                             <span className="text-[9px] font-black uppercase tracking-widest text-orange-800 block mb-0.5">{item.category}</span>
@@ -141,36 +146,31 @@ export function SearchOverlay() {
 
 
 
-// "use client";
-
-
-
-// This function pulls from all the IDs we've created across the site
-const DISCOVERY_POOL = [
-  { path: "/artifacts/benin-head" },
-  { path: "/artifacts/golden-rhino" },
-  { path: "/artifacts/lydenburg-mask" },
-  { path: "/timeline#aksum" },
-  { path: "/timeline#mali" },
-  { path: "/timeline#songhai" },
-  { path: "/library" } // Could also deep link to specific manuscripts
-];
-
 export function DiscoveryButton() {
   const router = useRouter();
+  const { data: storiesData, isSuccess: storiesOk } = useStories();
+  const { data: countriesData, isSuccess: countriesOk } = useCountries();
+
+  const discoveryPaths = useMemo(() => {
+    const paths: string[] = [];
+    if (storiesOk && storiesData?.items?.length) {
+      (storiesData.items as { id: string }[]).forEach((s) => paths.push(`/stories/${s.id}`));
+    }
+    if (countriesOk && countriesData?.items?.length) paths.push("/cultures", "/map");
+    return paths;
+  }, [storiesOk, storiesData?.items, countriesOk, countriesData?.items]);
 
   const handleDiscovery = () => {
-    const randomIndex = Math.floor(Math.random() * DISCOVERY_POOL.length);
-    const destination = DISCOVERY_POOL[randomIndex].path;
-    
-    // Trigger the navigation
-    router.push(destination);
+    if (discoveryPaths.length === 0) return;
+    const randomIndex = Math.floor(Math.random() * discoveryPaths.length);
+    router.push(discoveryPaths[randomIndex]!);
   };
 
   return (
     <button 
       onClick={handleDiscovery}
-      className="fixed bottom-8 left-8 z-40 bg-white dark:bg-stone-900 text-stone-900 dark:text-white p-4 border border-stone-200 dark:border-stone-800 shadow-xl hover:text-orange-700 transition-all flex items-center gap-3 group"
+      disabled={discoveryPaths.length === 0}
+      className="fixed bottom-8 left-8 z-40 bg-white dark:bg-stone-900 text-stone-900 dark:text-white p-4 border border-stone-200 dark:border-stone-800 shadow-xl hover:text-orange-700 transition-all flex items-center gap-3 group disabled:opacity-50 disabled:pointer-events-none"
     >
       <Sparkles size={18} className="group-hover:rotate-12 transition-transform text-orange-700" />
       <span className="text-[10px] font-black uppercase tracking-widest hidden md:inline">Random Discovery</span>

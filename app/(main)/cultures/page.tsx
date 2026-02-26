@@ -1,36 +1,45 @@
 "use client";
 
+import { CultureOverlay } from "../map/culltureOverlay";
+import { useCountries, useCultures } from "@/lib/api";
+import { countryToCultureDisplay, cultureToCultureDisplay, type CultureDisplay } from "@/lib/api/mappers";
 import { AnimatePresence, motion } from "framer-motion";
+import { History } from "lucide-react";
 import { useMemo, useState } from "react";
 
-import { History } from "lucide-react";
-import { CultureOverlay } from "../map/culltureOverlay";
-
-// Updated data with numeric start/end dates for the timeline
-const CULTURES = [
-  { id: "mali", name: "Mali Empire", region: "West Africa", start: 1230, end: 1670, period: "1230 – 1670", capital: "Niani", language: "Mandinka", desc: "Wealthiest empire in history.", image: "https://images.unsplash.com/photo-1518709268805-4e9042af9f23" },
-  { id: "aksum", name: "Kingdom of Aksum", region: "East Africa", start: 100, end: 940, period: "100 – 940 AD", capital: "Aksum", language: "Ge'ez", desc: "Naval power bridge to India.", image: "https://images.unsplash.com/photo-1523438885200-e635ba2c371e" },
-  { id: "zimbabwe", name: "Great Zimbabwe", region: "Southern Africa", start: 1000, end: 1500, period: "11th – 15th Century", capital: "Great Zimbabwe", language: "Shona", desc: "Stone city trade hub.", image: "https://images.unsplash.com/photo-1516026672322-bc52d61a55d5" },
-  { id: "kush", name: "Kingdom of Kush", region: "North Africa", start: -1070, end: 350, period: "1070 BC – 350 AD", capital: "Meroë", language: "Meroitic", desc: "The Black Pharaohs of the Nile.", image: "https://images.unsplash.com/photo-1503177119275-0aa32b3a9368" }
-];
-
 export default function CulturePage() {
-  const [selectedCulture, setSelectedCulture] = useState<typeof CULTURES[0] | null>(null);
+  const [selectedCulture, setSelectedCulture] = useState<CultureDisplay | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
   const [activeRegion, setActiveRegion] = useState("All");
-  const [yearFilter, setYearFilter] = useState(2000); // Default to "modern" to show all, or adjust
+  const [yearFilter, setYearFilter] = useState(2000);
 
-  // FILTER LOGIC
+  const { data: culturesData, isSuccess: culturesOk, isPending: culturesPending } = useCultures(
+    { region: activeRegion === "All" ? undefined : activeRegion, year: yearFilter, search: searchQuery || undefined }
+  );
+  const { data: countriesData, isSuccess: countriesOk, isPending: countriesPending } = useCountries();
+
+  const culturesList = useMemo(() => {
+    if (culturesOk && culturesData?.items?.length) {
+      return (culturesData.items as import("@/lib/api/types").Culture[]).map(cultureToCultureDisplay);
+    }
+    if (countriesOk && countriesData?.items?.length) {
+      return (countriesData.items as import("@/lib/api/types").Country[]).map(countryToCultureDisplay);
+    }
+    return [];
+  }, [culturesOk, culturesData?.items, countriesOk, countriesData?.items]);
+
   const filteredCultures = useMemo(() => {
-    return CULTURES.filter(c => {
-      const matchesSearch = c.name.toLowerCase().includes(searchQuery.toLowerCase());
+    if (culturesOk && culturesData?.items?.length) {
+      return culturesList;
+    }
+    return culturesList.filter((c) => {
+      const matchesSearch = !searchQuery || c.name.toLowerCase().includes(searchQuery.toLowerCase());
       const matchesRegion = activeRegion === "All" || c.region === activeRegion;
-      // Show culture if it existed on or before the selected year on the timeline
-      const matchesYear = c.start <= yearFilter; 
-      
+      const start = c.start ?? 0;
+      const matchesYear = start <= yearFilter;
       return matchesSearch && matchesRegion && matchesYear;
     });
-  }, [searchQuery, activeRegion, yearFilter]);
+  }, [culturesOk, culturesData?.items, searchQuery, activeRegion, yearFilter, culturesList]);
 
   return (
     <main className="min-h-screen bg-stone-50 dark:bg-[#0c0a09] pt-32 pb-40 px-8 transition-colors duration-500">
@@ -79,6 +88,11 @@ export default function CulturePage() {
       </div>
 
       {/* 3. GRID */}
+      {(culturesPending || countriesPending) && culturesList.length === 0 ? (
+        <p className="max-w-7xl mx-auto py-20 text-center text-stone-500 font-mono text-sm uppercase tracking-widest">Loading…</p>
+      ) : filteredCultures.length === 0 ? (
+        <p className="max-w-7xl mx-auto py-20 text-center text-stone-500 font-mono text-sm uppercase tracking-widest">No cultures loaded yet.</p>
+      ) : (
       <div className="max-w-7xl mx-auto grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
         <AnimatePresence mode="popLayout">
           {filteredCultures.map((culture) => (
@@ -91,7 +105,7 @@ export default function CulturePage() {
               onClick={() => setSelectedCulture(culture)}
               className="group relative h-100 bg-stone-900 overflow-hidden border border-stone-800"
             >
-              <img src={culture.image} className="absolute inset-0 w-full h-full object-cover opacity-50 group-hover:opacity-100 group-hover:scale-110 transition-all duration-700" alt="" />
+              <img src={culture.image ?? ""} className="absolute inset-0 w-full h-full object-cover opacity-50 group-hover:opacity-100 group-hover:scale-110 transition-all duration-700" alt="" />
               <div className="absolute inset-0 bg-linear-to-t from-black to-transparent" />
               <div className="absolute inset-0 p-6 flex flex-col justify-end">
                 <h3 className="text-xl font-black uppercase italic tracking-tighter text-white">{culture.name}</h3>
@@ -101,6 +115,7 @@ export default function CulturePage() {
           ))}
         </AnimatePresence>
       </div>
+      )}
 
       <CultureOverlay data={selectedCulture} onCloseAction={() => setSelectedCulture(null)} />
     </main>
