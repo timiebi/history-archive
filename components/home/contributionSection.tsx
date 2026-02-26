@@ -3,8 +3,16 @@
 import Link from "next/link";
 import { useContributors } from "@/lib/api";
 
-export function ContributionSection() {
-  const { data, isSuccess } = useContributors();
+type InitialContributors = { items?: { id: string; name: string; email?: string }[] };
+
+type ContributorItem = { id: string; name: string; email: string; createdAt?: string };
+
+export function ContributionSection({ initialContributors }: { initialContributors?: InitialContributors } = {}) {
+  const { data, isSuccess } = useContributors({
+    initialData: initialContributors?.items?.length
+      ? { items: initialContributors.items as ContributorItem[] }
+      : undefined,
+  });
   const contributors = (data?.items ?? []) as { id: string; name: string; email?: string }[];
 
   return (

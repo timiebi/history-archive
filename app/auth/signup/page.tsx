@@ -7,25 +7,26 @@ import { Button } from "@/components/ui/button";
 import Link from "next/link";
 import { UserPlus } from "lucide-react";
 import { useState, useEffect } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
+import { Suspense } from "react";
 
 const AUTH_USER_KEY = "archive_user";
 const AUTH_TOKEN_KEY = "archive_token";
 
-export default function SignUpPage() {
+function SignUpForm() {
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const roleFromUrl = searchParams.get("role") === "contributor" ? "CONTRIBUTOR" : "READER";
   const [firstName, setFirstName] = useState("");
   const [lastName, setLastName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [role, setRole] = useState<"READER" | "CONTRIBUTOR">("READER");
+  const [role, setRole] = useState<"READER" | "CONTRIBUTOR">(roleFromUrl);
 
-  // Pre-select contributor when coming from ?role=contributor
   useEffect(() => {
-    if (typeof window !== "undefined" && new URLSearchParams(window.location.search).get("role") === "contributor") {
-      setRole("CONTRIBUTOR");
-    }
-  }, []);
+    setRole(roleFromUrl);
+  }, [roleFromUrl]);
+
   const signUp = useSignUp({
     onSuccess: (res) => {
       if (res?.token) {
@@ -151,5 +152,13 @@ export default function SignUpPage() {
         </Link>
       </div>
     </motion.div>
+  );
+}
+
+export default function SignUpPage() {
+  return (
+    <Suspense fallback={<div className="space-y-8"><p className="text-stone-500 font-mono text-sm">Loading…</p></div>}>
+      <SignUpForm />
+    </Suspense>
   );
 }

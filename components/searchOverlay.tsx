@@ -13,8 +13,8 @@ export function SearchOverlay() {
   const [isOpen, setIsOpen] = useState(false);
   const [query, setQuery] = useState("");
 
-  const { data: storiesData, isSuccess: storiesOk } = useStories();
-  const { data: countriesData, isSuccess: countriesOk } = useCountries();
+  const { data: storiesData, isSuccess: storiesOk } = useStories(undefined, { enabled: isOpen });
+  const { data: countriesData, isSuccess: countriesOk } = useCountries({ enabled: isOpen });
 
   const allRecords = useMemo<SearchRecord[]>(() => {
     const list: SearchRecord[] = [];
