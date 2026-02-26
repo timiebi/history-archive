@@ -10,7 +10,8 @@ import { useStories } from "@/lib/api";
 import { storyToStoryDisplay } from "@/lib/api/mappers";
 import type { Story } from "@/lib/api/types";
 import Link from "next/link";
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
+import { ChevronLeft, ChevronRight } from "lucide-react";
 
 const HOME_STORIES_LIMIT = 6;
 
@@ -24,10 +25,11 @@ export function HomePageClient({
   initialStories: InitialStories;
   initialContributors: InitialContributors;
 }) {
-  const params = { limit: HOME_STORIES_LIMIT, page: 1 };
+  const [page, setPage] = useState(1);
+  const params = { limit: HOME_STORIES_LIMIT, page };
   const { data: storiesData, isSuccess, isPending } = useStories(params, {
     initialData:
-      initialStories?.items?.length
+      page === 1 && initialStories?.items?.length
         ? { items: initialStories.items as Story[] }
         : undefined,
   });
@@ -53,8 +55,11 @@ export function HomePageClient({
   }, [isSuccess, storiesData?.items]);
 
   const featuredStory = stories[0] ?? null;
-  const totalFromApi = (storiesData as { total?: number })?.total ?? 0;
+  const totalFromApi = (storiesData as { total?: number })?.total ?? initialStories?.total ?? 0;
+  const totalPages = Math.max(1, Math.ceil(totalFromApi / HOME_STORIES_LIMIT));
   const hasMoreStories = totalFromApi > HOME_STORIES_LIMIT;
+  const canPrev = page > 1;
+  const canNext = page < totalPages;
 
   return (
     <main className="bg-[#fafaf9] dark:bg-[#0c0a09] transition-colors duration-300">
@@ -107,16 +112,39 @@ export function HomePageClient({
         ) : (
           <>
             <StoryGrid stories={stories} />
-            {hasMoreStories && (
-              <div className="max-w-7xl mx-auto px-6 mt-12 text-center">
-                <Link
-                  href="/stories"
-                  className="inline-flex items-center gap-2 font-mono text-[10px] font-black uppercase tracking-widest text-orange-700 hover:text-orange-800 dark:text-orange-500"
-                >
-                  View all records →
-                </Link>
-              </div>
-            )}
+            <div className="max-w-7xl mx-auto px-6 mt-12 flex flex-col sm:flex-row items-center justify-center gap-6">
+              {hasMoreStories && totalPages > 1 && (
+                <nav className="flex items-center gap-2" aria-label="Stories pagination">
+                  <button
+                    type="button"
+                    onClick={() => setPage((p) => Math.max(1, p - 1))}
+                    disabled={!canPrev}
+                    className="p-2 rounded border border-stone-200 dark:border-stone-800 text-stone-600 dark:text-stone-400 hover:bg-stone-100 dark:hover:bg-stone-800 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+                    aria-label="Previous page"
+                  >
+                    <ChevronLeft size={18} />
+                  </button>
+                  <span className="font-mono text-[10px] uppercase tracking-widest text-stone-500 min-w-[6rem] text-center">
+                    Page {page} of {totalPages}
+                  </span>
+                  <button
+                    type="button"
+                    onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
+                    disabled={!canNext}
+                    className="p-2 rounded border border-stone-200 dark:border-stone-800 text-stone-600 dark:text-stone-400 hover:bg-stone-100 dark:hover:bg-stone-800 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+                    aria-label="Next page"
+                  >
+                    <ChevronRight size={18} />
+                  </button>
+                </nav>
+              )}
+              <Link
+                href="/stories"
+                className="inline-flex items-center gap-2 font-mono text-[10px] font-black uppercase tracking-widest text-orange-700 hover:text-orange-800 dark:text-orange-500"
+              >
+                View all records →
+              </Link>
+            </div>
           </>
         )}
       </section>
