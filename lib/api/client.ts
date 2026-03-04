@@ -5,7 +5,8 @@
  */
 
 import axios, { type AxiosError } from "axios";
-import type { ApiError, Manuscript, Timeline, Culture } from "./types";
+import { AUTH_TOKEN_KEY, AUTH_USER_KEY } from "@/lib/constants";
+import type { ApiError, Manuscript, Timeline, TimelineDetail, Culture } from "./types";
 
 function getBaseUrl(): string {
   const url = process.env.NEXT_PUBLIC_API_URL ?? "";
@@ -23,7 +24,7 @@ api.interceptors.request.use((config) => {
   const base = getBaseUrl();
   if (base) config.baseURL = base;
   if (typeof window !== "undefined") {
-    const token = localStorage.getItem("archive_token");
+    const token = localStorage.getItem(AUTH_TOKEN_KEY);
     if (token) config.headers.Authorization = `Bearer ${token}`;
   }
   return config;
@@ -69,6 +70,12 @@ api.interceptors.response.use(
   (err: AxiosError<ApiError>) => {
     const status = err.response?.status ?? 0;
     const data = err.response?.data;
+    if (status === 401 && typeof window !== "undefined") {
+      localStorage.removeItem(AUTH_TOKEN_KEY);
+      localStorage.removeItem(AUTH_USER_KEY);
+      const redirectUrl = "/auth/login?reason=session_expired";
+      window.location.href = redirectUrl;
+    }
     const fallback =
       err.code === "ECONNABORTED"
         ? "Request timed out. Please try again."
@@ -127,6 +134,36 @@ export async function authForgotPassword(email: string): Promise<{ message?: str
 
 export async function authResetPassword(token: string, newPassword: string): Promise<{ message?: string }> {
   const { data } = await api.patch<{ message?: string }>("/auth/reset-password", { token, newPassword });
+  return data;
+}
+
+// ——— Current user profile (GET /users/me, PATCH /users/me, PATCH /users/me/password) ———
+export interface MeUser {
+  id: string;
+  name: string;
+  email: string;
+  role: string;
+  status?: string;
+  createdAt?: string;
+}
+
+export async function getMe(): Promise<MeUser> {
+  const { data } = await api.get<MeUser>("/users/me");
+  return data;
+}
+
+export async function updateMe(body: { name?: string }): Promise<MeUser> {
+  const { data } = await api.patch<MeUser>("/users/me", body);
+  return data;
+}
+
+export interface ChangePasswordBody {
+  currentPassword: string;
+  newPassword: string;
+}
+
+export async function changePassword(body: ChangePasswordBody): Promise<{ message?: string }> {
+  const { data } = await api.patch<{ message?: string }>("/users/me/password", body);
   return data;
 }
 
@@ -275,13 +312,26 @@ export interface StorySectionInput {
 export interface CreateStoryBody {
   title: string;
   content: string;
-  categoryId: string;
-  image?: string;
+  /** Category UUID (optional if categoryName is sent). */
+  categoryId?: string;
+  /** Category name; backend finds or creates. Use with static dropdown. */
+  categoryName?: string;
+  /** Cover image URL (required). */
+  image: string;
   sections?: StorySectionInput[];
   videoUrl?: string;
   sourceUrl?: string;
   author?: string;
   countryId?: string;
+  /** Country name; sent when countryId is external (ext-XX) so backend can create internal country. */
+  countryName?: string;
+  /** Attach to existing timeline */
+  timelineId?: string;
+  /** Create new timeline: name (required when creating new) */
+  timelineName?: string;
+  timelineDescription?: string;
+  timelineStartYear?: number;
+  timelineEndYear?: number;
 }
 
 export async function createStory(body: CreateStoryBody): Promise<Record<string, unknown>> {
@@ -320,14 +370,41 @@ export async function getTimelines(): Promise<{ items: Timeline[] }> {
   }
 }
 
-export async function getTimelineById(id: string): Promise<Record<string, unknown> | null> {
+export async function getTimelineById(id: string): Promise<TimelineDetail | null> {
   try {
-    const { data } = await api.get<Record<string, unknown>>(`/timelines/${encodeURIComponent(id)}`);
+    const { data } = await api.get<TimelineDetail>(`/timelines/${encodeURIComponent(id)}`);
     return data;
   } catch (e: unknown) {
     if (isApiClientError(e) && e.status === 404) return null;
     throw e;
   }
+}
+
+// ——— Contributor dashboard (GET /contributors/me/overview) ———
+export interface ContributorOverviewResponse {
+  myStories: Array<{
+    id: string;
+    title: string;
+    createdAt: string;
+    timelineId: string | null;
+    timelineName: string | null;
+    countryName: string | null;
+    categoryName: string;
+    source: string;
+  }>;
+  myTimelines: Array<{
+    id: string;
+    name: string;
+    startYear: number;
+    endYear: number | null;
+    description: string | null;
+    storyCount: number;
+  }>;
+}
+
+export async function getContributorOverview(): Promise<ContributorOverviewResponse> {
+  const { data } = await api.get<ContributorOverviewResponse>("/contributors/me/overview");
+  return data;
 }
 
 // ——— Library / Manuscripts (GET /library, GET /library/:id) ———

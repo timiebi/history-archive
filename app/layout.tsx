@@ -1,10 +1,8 @@
-import { Footer } from "@/components/layouts/footer";
-import { Navbar } from "@/components/layouts/navbar";
 import { QueryProvider } from "@/components/providers/QueryProvider";
 import { ThemeProvider } from "@/components/providers/themeProviders";
+import { SearchOverlay } from "@/components/searchOverlay";
 import type { Metadata } from "next";
 import "./globals.css";
-import { SearchOverlay } from "@/components/searchOverlay";
 
 
 export const metadata: Metadata = {

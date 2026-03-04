@@ -2,7 +2,8 @@
 
 import { motion, useScroll, useSpring, useInView, AnimatePresence } from "framer-motion";
 import { useRef, useState, useEffect, useMemo } from "react";
-import { Globe, X } from "lucide-react";
+import Link from "next/link";
+import { Globe, X, ArrowRight } from "lucide-react";
 import { useCountries, useTimelines } from "@/lib/api";
 import type { Country, Timeline } from "@/lib/api/types";
 
@@ -84,7 +85,13 @@ function KingdomRow({ kingdom, index, setActive, showMap }: { kingdom: KingdomRo
             "{kingdom.description}"
           </p>
           
-          <div className="flex items-center gap-6">
+          <div className="flex flex-wrap items-center gap-6">
+             <Link
+               href={`/timelines/${kingdom.id}`}
+               className="flex items-center gap-2 text-[10px] font-black uppercase tracking-widest text-orange-700 hover:text-stone-900 dark:hover:text-white transition-colors group"
+             >
+                View timeline <ArrowRight size={12} className="group-hover:translate-x-1 transition-transform" />
+             </Link>
              <button 
                onClick={() => showMap(kingdom)}
                className="flex items-center gap-2 text-[10px] font-black uppercase tracking-widest text-orange-700 hover:text-stone-900 dark:hover:text-white transition-colors group"

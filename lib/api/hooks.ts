@@ -25,6 +25,10 @@ import {
   getCultures,
   getTimelines,
   getTimelineById,
+  getContributorOverview,
+  getMe,
+  updateMe,
+  changePassword,
   getLibrary,
   getManuscriptById,
   type AuthLoginBody,
@@ -32,8 +36,11 @@ import {
   type CreateStoryBody,
   type Artifact,
   type ReactionType,
+  type ContributorOverviewResponse,
+  type MeUser,
+  type ChangePasswordBody,
 } from "./client";
-import type { Category, Country, Story, Timeline, Manuscript, Culture } from "./types";
+import type { Category, Country, Story, Timeline, TimelineDetail, Manuscript, Culture } from "./types";
 
 const keys = {
   categories: ["api", "categories"] as const,
@@ -48,6 +55,8 @@ const keys = {
   cultures: (params?: Record<string, unknown>) => ["api", "cultures", params ?? {}] as const,
   timelines: ["api", "timelines"] as const,
   timeline: (id: string) => ["api", "timelines", id] as const,
+  contributorOverview: ["api", "contributors", "me", "overview"] as const,
+  me: ["api", "users", "me"] as const,
   library: ["api", "library"] as const,
   manuscript: (id: string) => ["api", "library", id] as const,
 };
@@ -173,11 +182,11 @@ export function useTimelines(
 
 export function useTimeline(
   id: string | null,
-  options?: Omit<UseQueryOptions<Timeline | null, Error>, "queryKey" | "queryFn">
+  options?: Omit<UseQueryOptions<TimelineDetail | null, Error>, "queryKey" | "queryFn">
 ) {
   return useQuery({
     queryKey: keys.timeline(id ?? ""),
-    queryFn: () => getTimelineById(id!) as Promise<Timeline | null>,
+    queryFn: () => getTimelineById(id!),
     enabled: !!id,
     ...options,
   });
@@ -287,6 +296,55 @@ export function useSignUp(
   });
 }
 
+// ——— Contributor dashboard overview ———
+export function useContributorOverview(
+  options?: Omit<
+    UseQueryOptions<ContributorOverviewResponse, Error>,
+    "queryKey" | "queryFn"
+  > & { enabled?: boolean }
+) {
+  return useQuery({
+    queryKey: keys.contributorOverview,
+    queryFn: getContributorOverview,
+    ...options,
+  });
+}
+
+// ——— Current user profile (GET /users/me) ———
+export function useMe(
+  options?: Omit<UseQueryOptions<MeUser, Error>, "queryKey" | "queryFn"> & { enabled?: boolean }
+) {
+  return useQuery({
+    queryKey: keys.me,
+    queryFn: getMe,
+    ...options,
+  });
+}
+
+// ——— Update profile (PATCH /users/me) ———
+export function useUpdateMe(
+  options?: UseMutationOptions<MeUser, Error, { name?: string }>
+) {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: updateMe,
+    onSuccess: (data) => {
+      queryClient.setQueryData(keys.me, data);
+    },
+    ...options,
+  });
+}
+
+// ——— Change password (PATCH /users/me/password) ———
+export function useChangePassword(
+  options?: UseMutationOptions<{ message?: string }, Error, ChangePasswordBody>
+) {
+  return useMutation({
+    mutationFn: changePassword,
+    ...options,
+  });
+}
+
 // ——— Create story (contributors/admins) ———
 export function useCreateStory(
   options?: UseMutationOptions<
@@ -300,6 +358,7 @@ export function useCreateStory(
     mutationFn: createStory,
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: keys.stories() });
+      queryClient.invalidateQueries({ queryKey: keys.contributorOverview });
     },
     ...options,
   });

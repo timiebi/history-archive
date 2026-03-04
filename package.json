@@ -7,6 +7,8 @@
   },
   "scripts": {
     "dev": "next dev",
+    "dev:clean": "rm -f .next/dev/lock && next dev",
+    "dev:fresh": "rm -rf .next/cache .next/dev/lock 2>/dev/null; next dev",
     "build": "next build",
     "start": "next start",
     "lint": "eslint"

@@ -1,4 +1,3 @@
-import { Mail } from "lucide-react"; // or use an SVG
 
 export function Footer() {
   return (

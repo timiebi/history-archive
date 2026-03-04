@@ -3,17 +3,26 @@
 import { useLogin } from "@/lib/api";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { AUTH_TOKEN_KEY, AUTH_USER_KEY } from "@/lib/constants";
 import { motion } from "framer-motion";
 import { ArrowRight, ShieldCheck } from "lucide-react";
 import Link from "next/link";
-import { useState } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
+import { useState, Suspense } from "react";
 
-const AUTH_USER_KEY = "archive_user";
-const AUTH_TOKEN_KEY = "archive_token";
+/** Allow only same-origin paths: starts with / and not // or protocol-relative. */
+function isSafeRedirect(path: string | null): path is string {
+  if (!path || typeof path !== "string") return false;
+  const trimmed = path.trim();
+  return trimmed.startsWith("/") && !trimmed.startsWith("//") && !/^https?:\/\//i.test(trimmed);
+}
 
-export default function LoginPage() {
+function LoginForm() {
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const reason = searchParams.get("reason");
+  const redirectParam = searchParams.get("redirect");
+  const sessionExpired = reason === "session_expired";
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const login = useLogin({
@@ -23,7 +32,8 @@ export default function LoginPage() {
           localStorage.setItem(AUTH_TOKEN_KEY, res.token);
           if (res.user) localStorage.setItem(AUTH_USER_KEY, JSON.stringify(res.user));
         }
-        router.push("/");
+        const target = isSafeRedirect(redirectParam) ? redirectParam : "/";
+        router.push(target);
       }
     },
     onError: () => {},
@@ -53,6 +63,11 @@ export default function LoginPage() {
       </div>
 
       {/* 2. FORM SECTION */}
+      {sessionExpired && (
+        <p className="text-[10px] font-mono uppercase text-amber-700 dark:text-amber-400 bg-amber-50 dark:bg-amber-950/50 px-3 py-2 border border-amber-200 dark:border-amber-800">
+          Your session expired. Please sign in again.
+        </p>
+      )}
       <form className="space-y-5" onSubmit={onSubmit}>
         {login.isError && (
           <p className="text-[10px] font-mono uppercase text-red-600 dark:text-red-400 bg-red-50 dark:bg-red-950/50 px-3 py-2">
@@ -115,5 +130,13 @@ export default function LoginPage() {
         </Link>
       </div>
     </motion.div>
+  );
+}
+
+export default function LoginPage() {
+  return (
+    <Suspense fallback={<div className="space-y-8"><p className="text-stone-500 font-mono text-sm">Loading…</p></div>}>
+      <LoginForm />
+    </Suspense>
   );
 }

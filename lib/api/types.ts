@@ -79,6 +79,43 @@ export interface Timeline {
   [key: string]: unknown;
 }
 
+/** Backend: GET /timelines/:id – timeline with stories, manuscripts, artifacts (no index signature) */
+export interface TimelineDetailStory {
+  id: string;
+  title: string;
+  image?: string;
+  category?: { name: string };
+  country?: { name: string };
+}
+
+export interface TimelineDetailManuscript {
+  id: string;
+  title: string;
+  author: string;
+  era: string;
+}
+
+export interface TimelineDetailArtifact {
+  id: string;
+  name: string;
+  origin: string;
+  year: string;
+  image?: string;
+}
+
+export interface TimelineDetail {
+  id: string;
+  name: string;
+  description?: string;
+  startYear: number;
+  endYear?: number;
+  stories?: TimelineDetailStory[];
+  manuscripts?: TimelineDetailManuscript[];
+  artifacts?: TimelineDetailArtifact[];
+  source?: string;
+  externalContext?: unknown;
+}
+
 /** Backend: GET /cultures */
 export interface Culture {
   id: string;
