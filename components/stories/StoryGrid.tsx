@@ -33,7 +33,7 @@ function StoryCardReaction({ story, userId }: { story: Story; userId: string | n
         toggle.mutate("HEART");
       }}
       disabled={toggle.isPending}
-      className={`absolute top-2 right-2 p-2 rounded-full backdrop-blur-sm transition-colors z-10 ${myReaction === "HEART" ? "bg-orange-700 text-white" : "bg-white/80 dark:bg-stone-900/80 text-stone-500 hover:text-orange-700"}`}
+      className={`absolute top-2 right-2 p-2 rounded-full backdrop-blur-sm transition-colors z-10 cursor-pointer ${myReaction === "HEART" ? "bg-orange-700 text-white" : "bg-white/80 dark:bg-stone-900/80 text-stone-500 hover:text-orange-700"}`}
       aria-label={myReaction === "HEART" ? "Remove heart" : "Heart"}
     >
       <Heart size={14} fill={myReaction === "HEART" ? "currentColor" : "none"} />
@@ -69,14 +69,14 @@ export function StoryGrid({ stories }: { stories: Story[] }) {
       {/* The Grid */}
       <div className="grid gap-x-10 gap-y-16 sm:grid-cols-2 lg:grid-cols-3">
         {stories.map((story) => (
-          <article key={story.id} className="group relative flex flex-col">
-            {/* Image Container */}
-            <div className="relative aspect-4/5 w-full overflow-hidden rounded-sm bg-stone-200 mb-6">
+          <article key={story.id} className="group relative flex flex-col cursor-pointer">
+            {/* Image Container: fixed aspect box, image fills and covers */}
+            <div className="relative aspect-4/5 w-full overflow-hidden rounded-sm bg-stone-200 dark:bg-stone-800 mb-6">
               <StoryCardReaction story={story} userId={userId} />
               <img
                 src={story.image || "https://images.unsplash.com/photo-1503177119275-0aa32b3a9368?q=80&w=800"}
                 alt={story.title}
-                className="object-cover w-full transition duration-700 ease-out group-hover:scale-110 group-hover:rotate-1"
+                className="absolute inset-0 w-full h-full object-cover transition duration-700 ease-out group-hover:scale-105"
               />
               
               {/* Region, Source & Contributor Tags */}
@@ -113,6 +113,7 @@ export function StoryGrid({ stories }: { stories: Story[] }) {
               <h3 className="text-2xl font-bold leading-tight text-stone-900 dark:text-stone-100 group-hover:text-orange-800 dark:group-hover:text-orange-500 transition-colors duration-300 mb-4">
                 <a
                   href={story.source === "EXTERNAL" && story.externalSource ? `/stories/external/${story.externalSource}/${encodeURIComponent(story.id)}` : `/stories/${story.id}`}
+                  className="cursor-pointer"
                 >
                   <span className="absolute inset-0" aria-hidden="true" />
                   {story.title}

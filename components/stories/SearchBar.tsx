@@ -8,13 +8,14 @@ export function SearchBar() {
   const [query, setQuery] = useState("");
   const router = useRouter();
 
-  const onSearch = (e: React.FormEvent) => {
+  const onSearch = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    router.push(`/?q=${query}`);
+    e.stopPropagation();
+    router.push(`/?q=${encodeURIComponent(query.trim())}`);
   };
 
   return (
-    <form onSubmit={onSearch} className="max-w-md">
+    <form role="search" onSubmit={(e) => { e.preventDefault(); onSearch(e); }} className="max-w-md">
       <Input
         placeholder="Search African history..."
         value={query}

@@ -95,8 +95,9 @@ export default function ContributePage() {
 
   const [submitAttempted, setSubmitAttempted] = useState(false);
 
-  const onSubmit = async (e: React.FormEvent) => {
+  const onSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
+    e.stopPropagation();
     setSubmitAttempted(true);
     setUploadError(null);
     const bodyContent = useSectionsForSubmit ? sections.map((s) => s.text).join("\n\n") : content;
@@ -242,7 +243,7 @@ export default function ContributePage() {
           <p className="text-stone-500 mt-4 font-serif italic">Add a verified record to the archive. A cover image is required; you can add optional sections (text + image per section) so your story displays like featured articles—text then image in flow.</p>
         </motion.div>
 
-        <motion.form initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.2 }} className="space-y-6" onSubmit={onSubmit}>
+        <motion.form initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.2 }} className="space-y-6" method="post" onSubmit={(e) => { e.preventDefault(); void onSubmit(e); }} noValidate>
           {createStory.isError && (
             <p className="text-[10px] font-mono uppercase text-red-600 dark:text-red-400 bg-red-50 dark:bg-red-950/50 px-3 py-2">
               {createStory.error?.message}

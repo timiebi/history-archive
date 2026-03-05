@@ -9,9 +9,9 @@ import { StoryGrid } from "@/components/stories/StoryGrid";
 import { useStories } from "@/lib/api";
 import { storyToStoryDisplay } from "@/lib/api/mappers";
 import type { Story } from "@/lib/api/types";
+import { ChevronLeft, ChevronRight } from "lucide-react";
 import Link from "next/link";
 import { useMemo, useState } from "react";
-import { ChevronLeft, ChevronRight } from "lucide-react";
 
 const HOME_STORIES_LIMIT = 6;
 
@@ -119,7 +119,7 @@ export function HomePageClient({
                     type="button"
                     onClick={() => setPage((p) => Math.max(1, p - 1))}
                     disabled={!canPrev}
-                    className="p-2 rounded border border-stone-200 dark:border-stone-800 text-stone-600 dark:text-stone-400 hover:bg-stone-100 dark:hover:bg-stone-800 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+                    className="p-2 rounded border border-stone-200 dark:border-stone-800 text-stone-600 dark:text-stone-400 hover:bg-stone-100 dark:hover:bg-stone-800 disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer transition-colors"
                     aria-label="Previous page"
                   >
                     <ChevronLeft size={18} />
@@ -131,7 +131,7 @@ export function HomePageClient({
                     type="button"
                     onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
                     disabled={!canNext}
-                    className="p-2 rounded border border-stone-200 dark:border-stone-800 text-stone-600 dark:text-stone-400 hover:bg-stone-100 dark:hover:bg-stone-800 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+                    className="p-2 rounded border border-stone-200 dark:border-stone-800 text-stone-600 dark:text-stone-400 hover:bg-stone-100 dark:hover:bg-stone-800 disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer transition-colors"
                     aria-label="Next page"
                   >
                     <ChevronRight size={18} />
@@ -140,7 +140,7 @@ export function HomePageClient({
               )}
               <Link
                 href="/stories"
-                className="inline-flex items-center gap-2 font-mono text-[10px] font-black uppercase tracking-widest text-orange-700 hover:text-orange-800 dark:text-orange-500"
+                className="inline-flex items-center gap-2 font-mono text-[10px] font-black uppercase tracking-widest text-orange-700 hover:text-orange-800 dark:text-orange-500 cursor-pointer"
               >
                 View all records →
               </Link>

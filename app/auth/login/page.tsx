@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { AUTH_TOKEN_KEY, AUTH_USER_KEY } from "@/lib/constants";
 import { motion } from "framer-motion";
-import { ArrowRight, ShieldCheck } from "lucide-react";
+import { ArrowRight, Eye, EyeOff, ShieldCheck } from "lucide-react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useState, Suspense } from "react";
@@ -25,6 +25,7 @@ function LoginForm() {
   const sessionExpired = reason === "session_expired";
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
   const login = useLogin({
     onSuccess: (res) => {
       if (res?.token) {
@@ -39,8 +40,9 @@ function LoginForm() {
     onError: () => {},
   });
 
-  const onSubmit = (e: React.FormEvent) => {
+  const onSubmit = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
+    e.stopPropagation();
     login.mutate({ email, password });
   };
 
@@ -68,7 +70,7 @@ function LoginForm() {
           Your session expired. Please sign in again.
         </p>
       )}
-      <form className="space-y-5" onSubmit={onSubmit}>
+      <form className="space-y-5" method="post" onSubmit={(e) => { e.preventDefault(); onSubmit(e); }} noValidate>
         {login.isError && (
           <p className="text-[10px] font-mono uppercase text-red-600 dark:text-red-400 bg-red-50 dark:bg-red-950/50 px-3 py-2">
             {login.error?.message}
@@ -93,14 +95,25 @@ function LoginForm() {
               Forgot Password?
             </Link>
           </div>
-          <Input 
-            type="password" 
-            autoComplete="current-password"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            className="rounded-none border-stone-200 dark:border-stone-800 bg-transparent h-12 font-mono focus-visible:ring-orange-800" 
-            placeholder="Enter your password"
-          />
+          <div className="relative">
+            <Input
+              type={showPassword ? "text" : "password"}
+              autoComplete="current-password"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              className="rounded-none border-stone-200 dark:border-stone-800 bg-transparent h-12 font-mono focus-visible:ring-orange-800 pr-10"
+              placeholder="Enter your password"
+            />
+            <button
+              type="button"
+              onClick={() => setShowPassword((p) => !p)}
+              className="absolute right-2 top-1/2 -translate-y-1/2 p-1.5 text-stone-400 hover:text-stone-600 dark:hover:text-stone-300 rounded cursor-pointer"
+              aria-label={showPassword ? "Hide password" : "Show password"}
+              tabIndex={-1}
+            >
+              {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+            </button>
+          </div>
         </div>
 
         <div className="flex items-center space-x-2 py-2">
@@ -113,7 +126,7 @@ function LoginForm() {
         <Button
           type="submit"
           disabled={login.isPending}
-          className="group w-full h-14 bg-stone-900 dark:bg-stone-100 text-stone-100 dark:text-stone-900 rounded-none font-black uppercase tracking-[0.2em] text-[10px] hover:bg-orange-800 dark:hover:bg-orange-600 transition-all disabled:opacity-60"
+          className="group w-full h-14 bg-stone-900 dark:bg-stone-100 text-stone-100 dark:text-stone-900 rounded-none font-black uppercase tracking-[0.2em] text-[10px] hover:bg-orange-800 dark:hover:bg-orange-600 transition-all disabled:opacity-60 cursor-pointer"
         >
           {login.isPending ? "Signing in…" : "Sign In"}
           <ArrowRight className="ml-2 w-3 h-3 group-hover:translate-x-1 transition-transform" />

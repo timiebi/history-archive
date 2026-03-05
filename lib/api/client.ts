@@ -73,8 +73,12 @@ api.interceptors.response.use(
     if (status === 401 && typeof window !== "undefined") {
       localStorage.removeItem(AUTH_TOKEN_KEY);
       localStorage.removeItem(AUTH_USER_KEY);
-      const redirectUrl = "/auth/login?reason=session_expired";
-      window.location.href = redirectUrl;
+      const path = window.location.pathname;
+      const isAuthPage = path.startsWith("/auth/");
+      if (!isAuthPage) {
+        const redirect = "&redirect=" + encodeURIComponent(path + window.location.search);
+        window.location.href = "/auth/login?reason=session_expired" + redirect;
+      }
     }
     const fallback =
       err.code === "ECONNABORTED"

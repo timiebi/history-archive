@@ -11,8 +11,9 @@ export default function ForgotPasswordPage() {
   const [email, setEmail] = useState("");
   const forgot = useForgotPassword();
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
+    e.stopPropagation();
     if (!email.trim()) return;
     forgot.mutate(email.trim());
   };
@@ -26,7 +27,7 @@ export default function ForgotPasswordPage() {
         </p>
       </div>
 
-      <form onSubmit={handleSubmit} className="space-y-6">
+      <form method="post" onSubmit={(e) => { e.preventDefault(); handleSubmit(e); }} className="space-y-6" noValidate>
         <div className="space-y-1">
           <label className="text-[9px] font-black uppercase tracking-widest text-stone-400">Verified_Email</label>
           <Input
@@ -53,7 +54,7 @@ export default function ForgotPasswordPage() {
         <Button
           type="submit"
           disabled={forgot.isPending || !email.trim()}
-          className="w-full h-14 bg-stone-900 dark:bg-stone-100 text-white dark:text-stone-900 rounded-none font-black uppercase tracking-[0.2em] text-[10px]"
+          className="w-full h-14 bg-stone-900 dark:bg-stone-100 text-white dark:text-stone-900 rounded-none font-black uppercase tracking-[0.2em] text-[10px] cursor-pointer"
         >
           {forgot.isPending ? "Sending…" : "Request_Recovery_Key"}
         </Button>

@@ -1,10 +1,10 @@
 
 "use client";
 
-import { useStories, useCategories } from "@/lib/api";
+import { useCategories, useStories } from "@/lib/api";
 import { storyToStoryDisplay, type StoryDisplay } from "@/lib/api/mappers";
-import { useState, useMemo } from "react";
-import { motion, AnimatePresence, useScroll, useTransform, useSpring } from "framer-motion";
+import { AnimatePresence, motion, useScroll, useSpring, useTransform } from "framer-motion";
+import { useMemo, useState } from "react";
 
 export default function StoriesPage() {
   const [activeCategory, setActiveCategory] = useState("All");

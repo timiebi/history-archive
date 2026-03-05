@@ -42,15 +42,17 @@ export default function DashboardProfilePage() {
     if (me?.name) setName(me.name);
   }, [me?.name]);
 
-  const handleUpdateName = (e: React.FormEvent) => {
+  const handleUpdateName = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
+    e.stopPropagation();
     const trimmed = name.trim();
     if (!trimmed || trimmed === me?.name) return;
     updateMe.mutate({ name: trimmed });
   };
 
-  const handleChangePassword = (e: React.FormEvent) => {
+  const handleChangePassword = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
+    e.stopPropagation();
     if (newPassword !== confirmPassword) {
       changePassword.reset();
       return;
@@ -110,7 +112,7 @@ export default function DashboardProfilePage() {
             </div>
           </dl>
 
-          <form onSubmit={handleUpdateName} className="space-y-4">
+          <form method="post" onSubmit={(e) => { e.preventDefault(); handleUpdateName(e); }} className="space-y-4" noValidate>
             <label htmlFor="profile-name" className="block text-[10px] font-black uppercase tracking-widest text-stone-400">
               Display name
             </label>
@@ -128,7 +130,7 @@ export default function DashboardProfilePage() {
               <Button
                 type="submit"
                 disabled={updateMe.isPending || name.trim() === me.name}
-                className="rounded-none font-mono text-[10px] uppercase shrink-0 min-h-[44px]"
+                className="rounded-none font-mono text-[10px] uppercase shrink-0 min-h-[44px] cursor-pointer"
               >
                 {updateMe.isPending ? "Saving…" : "Save"}
               </Button>
@@ -154,7 +156,7 @@ export default function DashboardProfilePage() {
           <h2 id="password-heading" className="flex items-center gap-2 text-stone-700 dark:text-stone-300 font-black uppercase tracking-widest text-xs mb-4">
             <Lock size={16} aria-hidden /> Change password
           </h2>
-          <form onSubmit={handleChangePassword} className="space-y-4">
+          <form method="post" onSubmit={(e) => { e.preventDefault(); handleChangePassword(e); }} className="space-y-4" noValidate>
             <label htmlFor="current-password" className="block text-[10px] font-black uppercase tracking-widest text-stone-400">
               Current password
             </label>
@@ -196,7 +198,7 @@ export default function DashboardProfilePage() {
             <Button
               type="submit"
               disabled={changePassword.isPending || !currentPassword || newPassword.length < 8 || newPassword !== confirmPassword}
-              className="rounded-none font-mono text-[10px] uppercase min-h-[44px]"
+              className="rounded-none font-mono text-[10px] uppercase min-h-[44px] cursor-pointer"
             >
               {changePassword.isPending ? "Updating…" : "Update password"}
             </Button>

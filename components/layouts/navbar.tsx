@@ -1,12 +1,19 @@
 "use client";
 
 import { Button } from "@/components/ui/button";
-import { Menu, X } from "lucide-react";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { Menu, X, CircleUser, LayoutDashboard, PenLine, Archive, Sun, Moon, LogIn, LogOut } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useCallback, useEffect, useState } from "react";
+import { useTheme } from "next-themes";
 import { AppContainer } from "./appContainer";
-import { ThemeToggle } from "./themeToggle";
 
 const AUTH_USER_KEY = "archive_user";
 const AUTH_TOKEN_KEY = "archive_token";
@@ -23,10 +30,12 @@ const NAV_LINKS = [
 
 export function Navbar() {
   const pathname = usePathname();
+  const { theme, setTheme } = useTheme();
   const [isScrolled, setIsScrolled] = useState(false);
   const [user, setUser] = useState<{ name?: string; role?: string; status?: string } | null>(null);
   const [mounted, setMounted] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
+  const canContribute = mounted && user && (user.role === "ADMIN" || (user.role === "CONTRIBUTOR" && user?.status === "APPROVED"));
 
   useEffect(() => {
     setMounted(true);
@@ -104,59 +113,71 @@ export function Navbar() {
           </nav>
 
           <div className={`flex items-center shrink-0 gap-2 sm:gap-3 ${onTransparentOverHero ? "text-stone-200" : ""}`}>
-            <ThemeToggle />
-            {mounted && user ? (
-              <>
-                {(user.role === "ADMIN" || (user.role === "CONTRIBUTOR" && user.status === "APPROVED")) && (
+            {/* Desktop: single icon opens menu with Dashboard, Enter Archive, Theme, Sign in/out */}
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className={`hidden sm:flex rounded-none cursor-pointer ${onTransparentOverHero ? "text-stone-300 hover:bg-white/10 hover:text-white" : "text-stone-600 dark:text-stone-400 hover:bg-stone-100 dark:hover:bg-stone-800"}`}
+                  aria-label="Open menu"
+                >
+                  <CircleUser size={22} aria-hidden />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" className="min-w-48 rounded-none border-stone-200 dark:border-stone-800 font-mono text-xs">
+                <DropdownMenuItem asChild>
+                  <Link href="/artifacts" className="flex items-center gap-2 cursor-pointer">
+                    <Archive size={16} /> Enter Archive
+                  </Link>
+                </DropdownMenuItem>
+                {canContribute && (
                   <>
-                    <Link href="/dashboard" className="hidden sm:block">
-                      <Button
-                        variant="ghost"
-                        className={`text-[10px] cursor-pointer font-black uppercase tracking-widest rounded-none transition-colors duration-200 ${onTransparentOverHero ? "text-stone-300 hover:bg-white/10 hover:text-white" : "hover:bg-stone-100 dark:hover:bg-stone-900"}`}
-                      >
-                        Dashboard
-                      </Button>
-                    </Link>
-                    <Link href="/contribute" className="hidden sm:block">
-                      <Button
-                        variant="outline"
-                        className={`text-[10px] cursor-pointer font-black uppercase tracking-widest rounded-none transition-colors duration-200 ${onTransparentOverHero ? "border-stone-400 text-stone-200 hover:bg-white hover:text-stone-900" : "border-orange-800 text-orange-800 hover:bg-orange-800 hover:text-white"}`}
-                      >
-                        Submit story
-                      </Button>
-                    </Link>
+                    <DropdownMenuSeparator />
+                    <DropdownMenuItem asChild>
+                      <Link href="/dashboard" className="flex items-center gap-2 cursor-pointer">
+                        <LayoutDashboard size={16} /> Dashboard
+                      </Link>
+                    </DropdownMenuItem>
+                    <DropdownMenuItem asChild>
+                      <Link href="/contribute" className="flex items-center gap-2 cursor-pointer">
+                        <PenLine size={16} /> Submit story
+                      </Link>
+                    </DropdownMenuItem>
                   </>
                 )}
-                <Button
-                  variant="ghost"
-                  className={`text-[10px] cursor-pointer font-black uppercase tracking-widest transition-colors duration-200 hidden sm:inline-flex ${onTransparentOverHero ? "text-stone-300 hover:bg-white/10 hover:text-white" : "hover:bg-stone-100 dark:hover:bg-stone-900"}`}
-                  onClick={() => {
-                    if (typeof window !== "undefined") {
-                      localStorage.removeItem(AUTH_TOKEN_KEY);
-                      localStorage.removeItem(AUTH_USER_KEY);
-                      setUser(null);
-                      window.location.href = "/";
-                    }
-                  }}
+                <DropdownMenuSeparator />
+                <DropdownMenuItem
+                  onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
+                  className="flex items-center gap-2 cursor-pointer"
                 >
-                  Sign out
-                </Button>
-              </>
-            ) : (
-              <Link href="/auth/login" className="hidden sm:block">
-                <Button
-                  variant="ghost"
-                  className={`text-[10px] cursor-pointer font-black uppercase tracking-widest transition-colors duration-200 ${onTransparentOverHero ? "text-stone-300 hover:bg-white/10 hover:text-white" : "hover:bg-stone-100 dark:hover:bg-stone-900"}`}
-                >
-                  Sign in
-                </Button>
-              </Link>
-            )}
-            <Link href="/artifacts" className="hidden sm:block">
-              <Button className={`cursor-pointer text-[10px] font-black uppercase tracking-widest rounded-none px-4 sm:px-6 transition-colors duration-200 ${onTransparentOverHero ? "bg-white/90 text-stone-900 hover:bg-white" : "bg-stone-900 dark:bg-stone-100 text-stone-100 dark:text-stone-900 hover:bg-orange-800 dark:hover:bg-orange-600"}`}>
-                Enter Archive
-              </Button>
-            </Link>
+                  {theme === "dark" ? <Sun size={16} /> : <Moon size={16} />}
+                  {theme === "dark" ? "Light mode" : "Dark mode"}
+                </DropdownMenuItem>
+                <DropdownMenuSeparator />
+                {mounted && user ? (
+                  <DropdownMenuItem
+                    onClick={() => {
+                      if (typeof window !== "undefined") {
+                        localStorage.removeItem(AUTH_TOKEN_KEY);
+                        localStorage.removeItem(AUTH_USER_KEY);
+                        setUser(null);
+                        window.location.href = "/";
+                      }
+                    }}
+                    className="flex items-center gap-2 cursor-pointer text-red-600 dark:text-red-400"
+                  >
+                    <LogOut size={16} /> Sign out
+                  </DropdownMenuItem>
+                ) : (
+                  <DropdownMenuItem asChild>
+                    <Link href="/auth/login" className="flex items-center gap-2 cursor-pointer">
+                      <LogIn size={16} /> Sign in
+                    </Link>
+                  </DropdownMenuItem>
+                )}
+              </DropdownMenuContent>
+            </DropdownMenu>
 
             <button
               type="button"

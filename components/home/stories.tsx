@@ -28,7 +28,7 @@ export function FeaturedSpotlight({ story }: { story?: FeaturedStory | null }) {
       <div className="max-w-7xl mx-auto px-6">
         <div className="grid lg:grid-cols-12 gap-12 items-center">
           <div className="lg:col-span-7 relative p-4 bg-white dark:bg-stone-800 shadow-2xl rotate-1">
-            <div className="relative aspect-4/3 overflow-hidden">
+            <div className="relative aspect-4/3 w-full overflow-hidden">
               <Image
                 src={img}
                 alt={title}
@@ -52,7 +52,7 @@ export function FeaturedSpotlight({ story }: { story?: FeaturedStory | null }) {
             </p>
             <Link
               href={href}
-              className="pt-4 flex items-center gap-4 group font-black uppercase text-xs tracking-[0.2em]"
+              className="pt-4 flex items-center gap-4 group font-black uppercase text-xs tracking-[0.2em] cursor-pointer"
             >
               Enter the Exhibition
               <span className="w-12 h-12 cursor-pointer rounded-full border border-stone-300 dark:border-stone-700 flex items-center justify-center group-hover:bg-stone-900 group-hover:text-white transition-all">

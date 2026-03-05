@@ -5,7 +5,7 @@ import { motion } from "framer-motion";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
-import { UserPlus } from "lucide-react";
+import { Eye, EyeOff, UserPlus } from "lucide-react";
 import { useState, useEffect } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Suspense } from "react";
@@ -21,6 +21,7 @@ function SignUpForm() {
   const [lastName, setLastName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
   const [role, setRole] = useState<"READER" | "CONTRIBUTOR">(roleFromUrl);
 
   useEffect(() => {
@@ -40,8 +41,9 @@ function SignUpForm() {
     onError: () => {},
   });
 
-  const onSubmit = (e: React.FormEvent) => {
+  const onSubmit = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
+    e.stopPropagation();
     const name = [firstName, lastName].filter(Boolean).join(" ") || email;
     signUp.mutate({ name, email, password, role });
   };
@@ -65,7 +67,7 @@ function SignUpForm() {
       </div>
 
       {/* 2. FORM */}
-      <form className="space-y-5" onSubmit={onSubmit}>
+      <form className="space-y-5" method="post" onSubmit={(e) => { e.preventDefault(); onSubmit(e); }} noValidate>
         {signUp.isError && (
           <p className="text-[10px] font-mono uppercase text-red-600 dark:text-red-400 bg-red-50 dark:bg-red-950/50 px-3 py-2">
             {signUp.error?.message}
@@ -105,13 +107,24 @@ function SignUpForm() {
 
         <div className="space-y-1.5">
           <label className="text-[10px] font-black uppercase tracking-widest text-stone-400">Password</label>
-          <Input 
-            type="password"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            className="rounded-none border-stone-200 dark:border-stone-800 bg-transparent h-12 font-mono focus-visible:ring-orange-800" 
-            placeholder="Create a strong password" 
-          />
+          <div className="relative">
+            <Input
+              type={showPassword ? "text" : "password"}
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              className="rounded-none border-stone-200 dark:border-stone-800 bg-transparent h-12 font-mono focus-visible:ring-orange-800 pr-10"
+              placeholder="Create a strong password"
+            />
+            <button
+              type="button"
+              onClick={() => setShowPassword((p) => !p)}
+              className="absolute right-2 top-1/2 -translate-y-1/2 p-1.5 text-stone-400 hover:text-stone-600 dark:hover:text-stone-300 rounded cursor-pointer"
+              aria-label={showPassword ? "Hide password" : "Show password"}
+              tabIndex={-1}
+            >
+              {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+            </button>
+          </div>
         </div>
 
         <div className="space-y-2">
@@ -138,7 +151,7 @@ function SignUpForm() {
         <Button
           type="submit"
           disabled={signUp.isPending}
-          className="w-full h-14 bg-stone-900 dark:bg-stone-100 text-stone-100 dark:text-stone-900 rounded-none font-black uppercase tracking-[0.2em] text-[10px] hover:bg-orange-800 dark:hover:bg-orange-600 transition-colors disabled:opacity-60"
+          className="w-full h-14 bg-stone-900 dark:bg-stone-100 text-stone-100 dark:text-stone-900 rounded-none font-black uppercase tracking-[0.2em] text-[10px] hover:bg-orange-800 dark:hover:bg-orange-600 transition-colors disabled:opacity-60 cursor-pointer"
         >
           {signUp.isPending ? "Creating account…" : "Create My Account"}
         </Button>

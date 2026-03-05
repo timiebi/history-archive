@@ -13,7 +13,7 @@ export async function fetchStoriesForHome(): Promise<{
   const base = getBase();
   if (!base) return { items: [] };
   try {
-    const res = await fetch(`${base}/stories?limit=6&page=1`, {
+    const res = await fetch(`${base}/stories?limit=4&page=1`, {
       next: { revalidate: 60 },
       headers: { Accept: "application/json" },
     });
