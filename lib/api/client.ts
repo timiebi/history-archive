@@ -350,7 +350,7 @@ export async function toggleStoryReaction(storyId: string, type: ReactionType): 
   return data;
 }
 
-// ——— Cultures (GET /cultures) ———
+// ——— Cultures (GET /cultures, POST /cultures) ———
 export async function getCultures(params?: { region?: string; year?: number; search?: string }): Promise<{ items: Culture[] }> {
   try {
     const { data } = await api.get<Culture[]>("/cultures", { params });
@@ -360,6 +360,23 @@ export async function getCultures(params?: { region?: string; year?: number; sea
     if (isApiClientError(e) && e.status === 404) return { items: [] };
     throw e;
   }
+}
+
+export interface CreateCultureInput {
+  name: string;
+  region: string;
+  timelineId: string;
+  capital?: string;
+  language?: string;
+  description?: string;
+  /** If omitted and countryId is set, backend uses the country flag. */
+  image?: string;
+  countryId?: string;
+}
+
+export async function createCulture(body: CreateCultureInput): Promise<Culture> {
+  const { data } = await api.post<Culture>("/cultures", body);
+  return data;
 }
 
 // ——— Timelines (GET /timelines, GET /timelines/:id) ———

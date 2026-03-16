@@ -1,8 +1,8 @@
 "use client";
 
 import { CultureOverlay } from "../map/culltureOverlay";
-import { useCountries, useCultures } from "@/lib/api";
-import { countryToCultureDisplay, cultureToCultureDisplay, type CultureDisplay } from "@/lib/api/mappers";
+import { useCultures } from "@/lib/api";
+import { cultureToCultureDisplay, type CultureDisplay } from "@/lib/api/mappers";
 import { AnimatePresence, motion } from "framer-motion";
 import { History } from "lucide-react";
 import { useMemo, useState } from "react";
@@ -16,29 +16,25 @@ export default function CulturePage() {
   const { data: culturesData, isSuccess: culturesOk, isPending: culturesPending } = useCultures(
     { region: activeRegion === "All" ? undefined : activeRegion, year: yearFilter, search: searchQuery || undefined }
   );
-  const { data: countriesData, isSuccess: countriesOk, isPending: countriesPending } = useCountries();
 
   const culturesList = useMemo(() => {
     if (culturesOk && culturesData?.items?.length) {
       return (culturesData.items as import("@/lib/api/types").Culture[]).map(cultureToCultureDisplay);
     }
-    if (countriesOk && countriesData?.items?.length) {
-      return (countriesData.items as import("@/lib/api/types").Country[]).map(countryToCultureDisplay);
-    }
     return [];
-  }, [culturesOk, culturesData?.items, countriesOk, countriesData?.items]);
+  }, [culturesOk, culturesData?.items]);
 
   const filteredCultures = useMemo(() => {
     if (culturesOk && culturesData?.items?.length) {
-      return culturesList;
+      return culturesList.filter((c) => {
+        const matchesSearch = !searchQuery || c.name.toLowerCase().includes(searchQuery.toLowerCase());
+        const matchesRegion = activeRegion === "All" || c.region === activeRegion;
+        const start = c.start ?? 0;
+        const matchesYear = start <= yearFilter;
+        return matchesSearch && matchesRegion && matchesYear;
+      });
     }
-    return culturesList.filter((c) => {
-      const matchesSearch = !searchQuery || c.name.toLowerCase().includes(searchQuery.toLowerCase());
-      const matchesRegion = activeRegion === "All" || c.region === activeRegion;
-      const start = c.start ?? 0;
-      const matchesYear = start <= yearFilter;
-      return matchesSearch && matchesRegion && matchesYear;
-    });
+    return culturesList;
   }, [culturesOk, culturesData?.items, searchQuery, activeRegion, yearFilter, culturesList]);
 
   return (
@@ -88,7 +84,7 @@ export default function CulturePage() {
       </div>
 
       {/* 3. GRID */}
-      {(culturesPending || countriesPending) && culturesList.length === 0 ? (
+      {culturesPending && culturesList.length === 0 ? (
         <p className="max-w-7xl mx-auto py-20 text-center text-stone-500 font-mono text-sm uppercase tracking-widest">Loading…</p>
       ) : filteredCultures.length === 0 ? (
         <p className="max-w-7xl mx-auto py-20 text-center text-stone-500 font-mono text-sm uppercase tracking-widest">No cultures loaded yet.</p>

@@ -492,6 +492,11 @@ export default function ContributePage() {
             {uploadingImages ? "Uploading images…" : createStory.isPending ? "Submitting…" : "Submit to archive"}
           </Button>
         </motion.form>
+        <p className="mt-8 text-center">
+          <Link href="/contribute/culture" className="text-stone-500 hover:text-stone-700 dark:hover:text-stone-300 text-sm font-mono">
+            Add a culture instead →
+          </Link>
+        </p>
       </div>
     </main>
   );

@@ -63,7 +63,7 @@ export function StoryDetailClient({ id }: { id: string }) {
             <span className="bg-orange-700 text-white px-4 py-1 text-[10px] font-black tracking-[0.3em] uppercase mb-6 inline-block">
               {s.category}
             </span>
-            <h1 className="text-5xl md:text-8xl font-black uppercase italic tracking-tighter leading-[0.85] text-stone-900 dark:text-white">
+            <h1 className="text-4xl md:text-6xl lg:text-7xl font-black uppercase italic tracking-tighter leading-[0.9] text-stone-50 drop-shadow-[0_2px_8px_rgba(0,0,0,0.8)] dark:text-white">
               {s.title}
             </h1>
           </div>
@@ -88,7 +88,7 @@ export function StoryDetailClient({ id }: { id: string }) {
                 type="button"
                 onClick={() => toggleReaction.mutate("LIKE")}
                 disabled={toggleReaction.isPending}
-                className={`flex items-center gap-1.5 transition-colors ${myReaction === "LIKE" ? "text-orange-700" : "text-stone-400 hover:text-stone-600"}`}
+                className={`flex items-center gap-1.5 transition-colors cursor-pointer disabled:cursor-not-allowed ${myReaction === "LIKE" ? "text-orange-700" : "text-stone-400 hover:text-stone-600"}`}
                 aria-pressed={myReaction === "LIKE"}
               >
                 <ThumbsUp size={16} />
@@ -98,7 +98,7 @@ export function StoryDetailClient({ id }: { id: string }) {
                 type="button"
                 onClick={() => toggleReaction.mutate("HEART")}
                 disabled={toggleReaction.isPending}
-                className={`flex items-center gap-1.5 transition-colors ${myReaction === "HEART" ? "text-orange-700" : "text-stone-400 hover:text-stone-600"}`}
+                className={`flex items-center gap-1.5 transition-colors cursor-pointer disabled:cursor-not-allowed ${myReaction === "HEART" ? "text-orange-700" : "text-stone-400 hover:text-stone-600"}`}
                 aria-pressed={myReaction === "HEART"}
               >
                 <Heart size={16} />
