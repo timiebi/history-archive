@@ -20,6 +20,7 @@ const AUTH_TOKEN_KEY = "archive_token";
 
 const NAV_LINKS = [
   { name: "Stories", href: "/stories" },
+  { name: "Ask Archive", href: "/ask" },
   { name: "Timelines", href: "/timelines" },
   { name: "Cultures", href: "/cultures" },
   { name: "Artifacts", href: "/artifacts" },

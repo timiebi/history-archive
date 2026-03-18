@@ -2,12 +2,15 @@
 
 import { useStory, useToggleStoryReaction } from "@/lib/api";
 import { Heart, ThumbsUp } from "lucide-react";
-import { useState, useEffect } from "react";
+import { useEffect, useRef, useState } from "react";
 
 export function StoryDetailClient({ id }: { id: string }) {
   const { data: story, isPending, isError } = useStory(id);
   const [userId, setUserId] = useState<string | null>(null);
   const toggleReaction = useToggleStoryReaction(id);
+  const queueRef = useRef<string[]>([]);
+  const [isSpeaking, setIsSpeaking] = useState(false);
+  const [ttsError, setTtsError] = useState<string | null>(null);
 
   useEffect(() => {
     if (typeof window === "undefined") return;
@@ -53,8 +56,100 @@ export function StoryDetailClient({ id }: { id: string }) {
     externalSource: (story as { externalSource?: string }).externalSource ?? "",
   };
 
+  // v1 requirement: read only the story body (no labels like Era/Author)
+  const storyBodyText = hasSections
+    ? sections.map((section) => section.text).join("\n\n").trim()
+    : (s.content ?? "").trim();
+
+  const stopSpeaking = () => {
+    if (typeof window === "undefined") return;
+    if (!("speechSynthesis" in window)) return;
+    window.speechSynthesis.cancel();
+    queueRef.current = [];
+    setIsSpeaking(false);
+  };
+
+  useEffect(() => {
+    return () => stopSpeaking();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  // If the user navigates to another story while TTS is playing,
+  // cancel immediately so audio never continues from the previous story.
+  useEffect(() => {
+    stopSpeaking();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [id]);
+
+  const chunkText = (text: string, maxChars = 2500) => {
+    const paragraphs = text
+      .split(/\n+/)
+      .map((p) => p.trim())
+      .filter(Boolean);
+    if (paragraphs.length === 0) return [text];
+
+    const chunks: string[] = [];
+    let current = "";
+    for (const p of paragraphs) {
+      const next = current ? `${current}\n\n${p}` : p;
+      if (next.length > maxChars && current) {
+        chunks.push(current);
+        current = p;
+      } else {
+        current = next;
+      }
+    }
+    if (current.trim()) chunks.push(current.trim());
+    return chunks.length ? chunks : [text];
+  };
+
+  const speakStoryBody = () => {
+    if (typeof window === "undefined") return;
+    setTtsError(null);
+
+    if (!("speechSynthesis" in window)) {
+      setTtsError("Text-to-speech is not supported in this browser.");
+      return;
+    }
+    if (!storyBodyText) {
+      setTtsError("Story text is not available for reading.");
+      return;
+    }
+
+    stopSpeaking();
+
+    const browserLang = navigator.language || "en-US";
+    const browserBase = browserLang.split("-")[0];
+    const voices = window.speechSynthesis.getVoices?.() ?? [];
+    const voice =
+      voices.find((v) => v.lang === browserLang) ||
+      voices.find((v) => v.lang?.startsWith(browserBase)) ||
+      voices[0];
+
+    queueRef.current = chunkText(storyBodyText);
+    setIsSpeaking(true);
+
+    const speakNext = () => {
+      const next = queueRef.current.shift();
+      if (!next) {
+        setIsSpeaking(false);
+        return;
+      }
+
+      const utterance = new SpeechSynthesisUtterance(next);
+      if (voice) utterance.voice = voice;
+      utterance.lang = voice?.lang || browserLang;
+      utterance.rate = 1;
+      utterance.onend = speakNext;
+      utterance.onerror = speakNext;
+      window.speechSynthesis.speak(utterance);
+    };
+
+    speakNext();
+  };
+
   return (
-    <article className="bg-[#fcfaf7] dark:bg-stone-950 min-h-screen pb-20">
+    <article className="bg-[#fcfaf7] dark:bg-stone-950 min-h-screen pb-32 md:pb-20">
       <header className="relative h-[60vh] md:h-[80vh] w-full">
         <img src={s.cover} alt={s.title} className="object-cover h-full w-full" />
         <div className="absolute inset-0 bg-linear-to-t from-[#fcfaf7] dark:from-stone-950 via-stone-950/20 to-transparent" />
@@ -107,6 +202,59 @@ export function StoryDetailClient({ id }: { id: string }) {
             </div>
           </>
         )}
+      </div>
+
+      {/* v1 TTS controls (fixed so users can stop anytime) */}
+      <div className="hidden md:block fixed right-6 top-24 z-50">
+        <div className="bg-[#fcfaf7] dark:bg-stone-950 border border-stone-200 dark:border-stone-800 p-4 w-[240px] space-y-3">
+          <div className="flex gap-3">
+            <button
+              type="button"
+              onClick={speakStoryBody}
+              disabled={!storyBodyText || isSpeaking}
+              className="rounded-none font-mono text-[10px] uppercase cursor-pointer px-3 py-3 min-h-[44px] bg-orange-700 text-white hover:bg-orange-800 transition disabled:opacity-50 disabled:cursor-not-allowed flex-1"
+            >
+              {isSpeaking ? "Reading…" : "Read"}
+            </button>
+            <button
+              type="button"
+              onClick={stopSpeaking}
+              disabled={!isSpeaking}
+              className="rounded-none font-mono text-[10px] uppercase cursor-pointer px-3 py-3 min-h-[44px] bg-transparent border border-stone-300 dark:border-stone-700 text-stone-900 dark:text-stone-100 hover:bg-stone-100 dark:hover:bg-stone-900 transition disabled:opacity-50 disabled:cursor-not-allowed flex-1"
+            >
+              Stop
+            </button>
+          </div>
+          {ttsError && (
+            <p className="text-[10px] font-mono uppercase text-red-600 dark:text-red-400">{ttsError}</p>
+          )}
+        </div>
+      </div>
+
+      <div className="md:hidden fixed bottom-4 left-4 right-4 z-50">
+        <div className="bg-[#fcfaf7] dark:bg-stone-950 border border-stone-200 dark:border-stone-800 p-3">
+          <div className="flex items-center justify-between gap-3">
+            <button
+              type="button"
+              onClick={speakStoryBody}
+              disabled={!storyBodyText || isSpeaking}
+              className="rounded-none font-mono text-[10px] uppercase cursor-pointer px-4 py-2 min-h-[44px] bg-orange-700 text-white hover:bg-orange-800 transition disabled:opacity-50 disabled:cursor-not-allowed flex-1"
+            >
+              {isSpeaking ? "Reading…" : "Read"}
+            </button>
+            <button
+              type="button"
+              onClick={stopSpeaking}
+              disabled={!isSpeaking}
+              className="rounded-none font-mono text-[10px] uppercase cursor-pointer px-4 py-2 min-h-[44px] bg-transparent border border-stone-300 dark:border-stone-700 text-stone-900 dark:text-stone-100 hover:bg-stone-100 dark:hover:bg-stone-900 transition disabled:opacity-50 disabled:cursor-not-allowed flex-1"
+            >
+              Stop
+            </button>
+          </div>
+          {ttsError && (
+            <p className="mt-2 text-[10px] font-mono uppercase text-red-600 dark:text-red-400">{ttsError}</p>
+          )}
+        </div>
       </div>
 
       <div className="max-w-4xl mx-auto px-6 py-16 md:py-24">
