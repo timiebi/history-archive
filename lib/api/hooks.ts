@@ -29,6 +29,9 @@ import {
   getMe,
   updateMe,
   changePassword,
+  getNotifications,
+  markNotificationRead,
+  markAllNotificationsRead,
   getLibrary,
   getManuscriptById,
   type AuthLoginBody,
@@ -38,6 +41,7 @@ import {
   type ReactionType,
   type ContributorOverviewResponse,
   type MeUser,
+  type UserNotification,
   type ChangePasswordBody,
 } from "./client";
 import type { Category, Country, Story, Timeline, TimelineDetail, Manuscript, Culture } from "./types";
@@ -57,6 +61,7 @@ const keys = {
   timeline: (id: string) => ["api", "timelines", id] as const,
   contributorOverview: ["api", "contributors", "me", "overview"] as const,
   me: ["api", "users", "me"] as const,
+  notifications: ["api", "notifications"] as const,
   library: ["api", "library"] as const,
   manuscript: (id: string) => ["api", "library", id] as const,
 };
@@ -341,6 +346,47 @@ export function useChangePassword(
 ) {
   return useMutation({
     mutationFn: changePassword,
+    ...options,
+  });
+}
+
+export function useNotifications(
+  limit = 30,
+  options?: Omit<
+    UseQueryOptions<{ items: UserNotification[]; unreadCount: number }, Error>,
+    "queryKey" | "queryFn"
+  >
+) {
+  return useQuery({
+    queryKey: [...keys.notifications, limit] as const,
+    queryFn: () => getNotifications(limit),
+    refetchInterval: 60000,
+    ...options,
+  });
+}
+
+export function useMarkAllNotificationsRead(
+  options?: UseMutationOptions<{ updated: number }, Error, void>
+) {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: () => markAllNotificationsRead(),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: keys.notifications });
+    },
+    ...options,
+  });
+}
+
+export function useMarkNotificationRead(
+  options?: UseMutationOptions<{ updated: number }, Error, string>
+) {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (notificationId: string) => markNotificationRead(notificationId),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: keys.notifications });
+    },
     ...options,
   });
 }

@@ -1,6 +1,7 @@
 "use client";
 
 import { Button } from "@/components/ui/button";
+import { useNotifications } from "@/lib/api";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -8,7 +9,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { Menu, X, CircleUser, LayoutDashboard, PenLine, Archive, Sun, Moon, LogIn, LogOut } from "lucide-react";
+import { Menu, X, CircleUser, LayoutDashboard, PenLine, Archive, Sun, Moon, LogIn, LogOut, Bell } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useCallback, useEffect, useState } from "react";
@@ -36,6 +37,10 @@ export function Navbar() {
   const [user, setUser] = useState<{ name?: string; role?: string; status?: string } | null>(null);
   const [mounted, setMounted] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
+  const { data: notifications } = useNotifications(20, {
+    enabled: mounted && !!user,
+  });
+  const unreadCount = notifications?.unreadCount ?? 0;
   const canContribute = mounted && user && (user.role === "ADMIN" || (user.role === "CONTRIBUTOR" && user?.status === "APPROVED"));
 
   useEffect(() => {
@@ -96,7 +101,7 @@ export function Navbar() {
             </span>
           </Link>
 
-          <nav className="hidden md:flex items-center min-w-0 flex-1 justify-center gap-4 lg:gap-6 xl:gap-8 overflow-hidden">
+          <nav className="hidden xl:flex items-center min-w-0 flex-1 justify-center gap-4 2xl:gap-6 overflow-hidden">
             {NAV_LINKS.map((link) => (
               <Link
                 key={link.name}
@@ -115,75 +120,97 @@ export function Navbar() {
 
           <div className={`flex items-center shrink-0 gap-2 sm:gap-3 ${onTransparentOverHero ? "text-stone-200" : ""}`}>
             {/* Desktop: single icon opens menu with Dashboard, Enter Archive, Theme, Sign in/out */}
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  className={`hidden sm:flex rounded-none cursor-pointer ${onTransparentOverHero ? "text-stone-300 hover:bg-white/10 hover:text-white" : "text-stone-600 dark:text-stone-400 hover:bg-stone-100 dark:hover:bg-stone-800"}`}
-                  aria-label="Open menu"
-                >
-                  <CircleUser size={22} aria-hidden />
-                </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="end" className="min-w-48 rounded-none border-stone-200 dark:border-stone-800 font-mono text-xs">
-                <DropdownMenuItem asChild>
-                  <Link href="/artifacts" className="flex items-center gap-2 cursor-pointer">
-                    <Archive size={16} /> Enter Archive
-                  </Link>
-                </DropdownMenuItem>
-                {canContribute && (
-                  <>
-                    <DropdownMenuSeparator />
-                    <DropdownMenuItem asChild>
-                      <Link href="/dashboard" className="flex items-center gap-2 cursor-pointer">
-                        <LayoutDashboard size={16} /> Dashboard
-                      </Link>
-                    </DropdownMenuItem>
-                    <DropdownMenuItem asChild>
-                      <Link href="/contribute" className="flex items-center gap-2 cursor-pointer">
-                        <PenLine size={16} /> Submit story
-                      </Link>
-                    </DropdownMenuItem>
-                  </>
-                )}
-                <DropdownMenuSeparator />
-                <DropdownMenuItem
-                  onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
-                  className="flex items-center gap-2 cursor-pointer"
-                >
-                  {theme === "dark" ? <Sun size={16} /> : <Moon size={16} />}
-                  {theme === "dark" ? "Light mode" : "Dark mode"}
-                </DropdownMenuItem>
-                <DropdownMenuSeparator />
-                {mounted && user ? (
-                  <DropdownMenuItem
-                    onClick={() => {
-                      if (typeof window !== "undefined") {
-                        localStorage.removeItem(AUTH_TOKEN_KEY);
-                        localStorage.removeItem(AUTH_USER_KEY);
-                        setUser(null);
-                        window.location.href = "/";
-                      }
-                    }}
-                    className="flex items-center gap-2 cursor-pointer text-red-600 dark:text-red-400"
+            {mounted ? (
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className={`hidden sm:flex rounded-none cursor-pointer ${onTransparentOverHero ? "text-stone-300 hover:bg-white/10 hover:text-white" : "text-stone-600 dark:text-stone-400 hover:bg-stone-100 dark:hover:bg-stone-800"}`}
+                    aria-label="Open menu"
                   >
-                    <LogOut size={16} /> Sign out
-                  </DropdownMenuItem>
-                ) : (
+                    <CircleUser size={22} aria-hidden />
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end" className="min-w-48 rounded-none border-stone-200 dark:border-stone-800 font-mono text-xs">
+                  {user && (
+                    <>
+                      <DropdownMenuItem asChild>
+                        <Link href="/notifications" className="flex items-center gap-2 cursor-pointer">
+                          <Bell size={16} /> Notifications{unreadCount > 0 ? ` (${unreadCount})` : ""}
+                        </Link>
+                      </DropdownMenuItem>
+                      <DropdownMenuSeparator />
+                    </>
+                  )}
                   <DropdownMenuItem asChild>
-                    <Link href="/auth/login" className="flex items-center gap-2 cursor-pointer">
-                      <LogIn size={16} /> Sign in
+                    <Link href="/artifacts" className="flex items-center gap-2 cursor-pointer">
+                      <Archive size={16} /> Enter Archive
                     </Link>
                   </DropdownMenuItem>
-                )}
-              </DropdownMenuContent>
-            </DropdownMenu>
+                  {canContribute && (
+                    <>
+                      <DropdownMenuSeparator />
+                      <DropdownMenuItem asChild>
+                        <Link href="/dashboard" className="flex items-center gap-2 cursor-pointer">
+                          <LayoutDashboard size={16} /> Dashboard
+                        </Link>
+                      </DropdownMenuItem>
+                      <DropdownMenuItem asChild>
+                        <Link href="/contribute" className="flex items-center gap-2 cursor-pointer">
+                          <PenLine size={16} /> Submit story
+                        </Link>
+                      </DropdownMenuItem>
+                    </>
+                  )}
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem
+                    onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
+                    className="flex items-center gap-2 cursor-pointer"
+                  >
+                    {theme === "dark" ? <Sun size={16} /> : <Moon size={16} />}
+                    {theme === "dark" ? "Light mode" : "Dark mode"}
+                  </DropdownMenuItem>
+                  <DropdownMenuSeparator />
+                  {user ? (
+                    <DropdownMenuItem
+                      onClick={() => {
+                        if (typeof window !== "undefined") {
+                          localStorage.removeItem(AUTH_TOKEN_KEY);
+                          localStorage.removeItem(AUTH_USER_KEY);
+                          setUser(null);
+                          window.location.href = "/";
+                        }
+                      }}
+                      className="flex items-center gap-2 cursor-pointer text-red-600 dark:text-red-400"
+                    >
+                      <LogOut size={16} /> Sign out
+                    </DropdownMenuItem>
+                  ) : (
+                    <DropdownMenuItem asChild>
+                      <Link href="/auth/login" className="flex items-center gap-2 cursor-pointer">
+                        <LogIn size={16} /> Sign in
+                      </Link>
+                    </DropdownMenuItem>
+                  )}
+                </DropdownMenuContent>
+              </DropdownMenu>
+            ) : (
+              <Button
+                variant="ghost"
+                size="icon"
+                className={`hidden sm:flex rounded-none cursor-pointer ${onTransparentOverHero ? "text-stone-300 hover:bg-white/10 hover:text-white" : "text-stone-600 dark:text-stone-400 hover:bg-stone-100 dark:hover:bg-stone-800"}`}
+                aria-label="Open menu"
+                disabled
+              >
+                <CircleUser size={22} aria-hidden />
+              </Button>
+            )}
 
             <button
               type="button"
               onClick={() => setMobileOpen((o) => !o)}
-              className={`md:hidden p-2 rounded-md transition-colors duration-200 ${onTransparentOverHero ? "text-stone-300 hover:bg-white/10" : "text-stone-600 dark:text-stone-400 hover:bg-stone-100 dark:hover:bg-stone-800"}`}
+              className={`xl:hidden p-2 rounded-md transition-colors duration-200 ${onTransparentOverHero ? "text-stone-300 hover:bg-white/10" : "text-stone-600 dark:text-stone-400 hover:bg-stone-100 dark:hover:bg-stone-800"}`}
               aria-label={mobileOpen ? "Close menu" : "Open menu"}
               aria-expanded={mobileOpen}
             >
@@ -195,7 +222,7 @@ export function Navbar() {
 
       {/* Mobile nav overlay */}
       <div
-        className={`md:hidden fixed inset-0 top-16 z-40 bg-[#fafaf9] dark:bg-[#0c0a09] transition-[opacity,visibility] duration-300 ${
+        className={`xl:hidden fixed inset-0 top-16 z-40 bg-[#fafaf9] dark:bg-[#0c0a09] transition-[opacity,visibility] duration-300 ${
           mobileOpen ? "opacity-100 visible" : "opacity-0 invisible pointer-events-none"
         }`}
         aria-hidden={!mobileOpen}
@@ -215,6 +242,11 @@ export function Navbar() {
             </Link>
           ))}
           <div className="border-t border-stone-200 dark:border-stone-800 my-4" />
+          {mounted && user && (
+            <Link href="/notifications" className="py-3 px-4 text-sm font-black uppercase tracking-widest text-stone-700 dark:text-stone-300 hover:bg-stone-100 dark:hover:bg-stone-800 rounded-md">
+              Notifications{unreadCount > 0 ? ` (${unreadCount})` : ""}
+            </Link>
+          )}
           {mounted && (user?.role === "ADMIN" || (user?.role === "CONTRIBUTOR" && user?.status === "APPROVED")) && (
             <>
               <Link href="/dashboard" className="py-3 px-4 text-sm font-black uppercase tracking-widest text-stone-700 dark:text-stone-300 hover:bg-stone-100 dark:hover:bg-stone-800 rounded-md">

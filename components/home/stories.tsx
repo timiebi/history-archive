@@ -20,7 +20,7 @@ export function FeaturedSpotlight({ story }: { story?: FeaturedStory | null }) {
   const excerpt = story?.excerpt || "A testament to the architectural brilliance of the Shona people, rising from the earth without a drop of mortar.";
   const sourceLabel = story?.externalSource ?? story?.source ?? "Archive";
   const href = story?.source === "EXTERNAL" && story?.externalSource
-    ? `/stories/external/${story.externalSource}/${encodeURIComponent(story.id)}`
+    ? `/stories/external/${encodeURIComponent(story.externalSource)}/${encodeURIComponent(story.id)}`
     : story ? `/stories/${story.id}` : "/stories";
 
   return (

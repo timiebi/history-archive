@@ -73,7 +73,7 @@ export default function AskArchivePage() {
       id: crypto.randomUUID(),
       role: "assistant",
       content:
-        "Ask me about stories in the Afri Archive. You can also say: read “<story title>”.",
+        "Ask me about stories in the Afri Archive. You can also say: read “Story title”.",
     },
   ]);
   const [input, setInput] = useState("");

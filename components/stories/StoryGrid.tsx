@@ -112,7 +112,7 @@ export function StoryGrid({ stories }: { stories: Story[] }) {
               
               <h3 className="text-2xl font-bold leading-tight text-stone-900 dark:text-stone-100 group-hover:text-orange-800 dark:group-hover:text-orange-500 transition-colors duration-300 mb-4">
                 <a
-                  href={story.source === "EXTERNAL" && story.externalSource ? `/stories/external/${story.externalSource}/${encodeURIComponent(story.id)}` : `/stories/${story.id}`}
+                  href={story.source === "EXTERNAL" && story.externalSource ? `/stories/external/${encodeURIComponent(story.externalSource)}/${encodeURIComponent(story.id)}` : `/stories/${story.id}`}
                   className="cursor-pointer"
                 >
                   <span className="absolute inset-0" aria-hidden="true" />

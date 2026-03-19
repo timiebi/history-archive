@@ -5,6 +5,21 @@ import Link from "next/link";
 
 const PLACEHOLDER_COVER = "https://images.unsplash.com/photo-1503177119275-0aa32b3a9368?q=80&w=1200";
 
+function normalizeSections(input: unknown): Array<{ text: string; image?: string }> {
+  if (!Array.isArray(input)) return [];
+  return input
+    .map((section) => {
+      const text = typeof section === "object" && section && "text" in section ? (section as { text?: unknown }).text : "";
+      const image =
+        typeof section === "object" && section && "image" in section ? (section as { image?: unknown }).image : undefined;
+      return {
+        text: typeof text === "string" ? text : String(text ?? ""),
+        image: typeof image === "string" ? image : undefined,
+      };
+    })
+    .filter((section) => section.text.trim().length > 0 || section.image?.trim());
+}
+
 export function ExternalStoryDetailClient({ source, externalId }: { source: string; externalId: string }) {
   const { data: story, isPending, isError } = useStoryByExternalId(source, externalId);
 
@@ -26,11 +41,11 @@ export function ExternalStoryDetailClient({ source, externalId }: { source: stri
   }
 
   const title = (story.title as string) ?? "Untitled";
-  const content = (story.content as string) ?? "";
+  const content = typeof story.content === "string" ? story.content : String(story.content ?? "");
   const cover = (story.image as string)?.trim() ? (story.image as string) : PLACEHOLDER_COVER;
   const author = (story.author as string) ?? "";
   const sourceLabel = (story.externalSource as string) ?? source;
-  const sections = (story.sections as { text: string; image?: string }[] | undefined) ?? [];
+  const sections = normalizeSections(story.sections);
   const hasSections = sections.length > 0;
 
   return (

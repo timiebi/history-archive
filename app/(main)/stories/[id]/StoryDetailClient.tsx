@@ -1,13 +1,31 @@
 "use client";
 
-import { useStory, useToggleStoryReaction } from "@/lib/api";
+import { useMarkNotificationRead, useStory, useToggleStoryReaction } from "@/lib/api";
 import { Heart, ThumbsUp } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
+import { useSearchParams } from "next/navigation";
+
+function normalizeSections(input: unknown): Array<{ text: string; image?: string }> {
+  if (!Array.isArray(input)) return [];
+  return input
+    .map((section) => {
+      const text = typeof section === "object" && section && "text" in section ? (section as { text?: unknown }).text : "";
+      const image =
+        typeof section === "object" && section && "image" in section ? (section as { image?: unknown }).image : undefined;
+      return {
+        text: typeof text === "string" ? text : String(text ?? ""),
+        image: typeof image === "string" ? image : undefined,
+      };
+    })
+    .filter((section) => section.text.trim().length > 0 || section.image?.trim());
+}
 
 export function StoryDetailClient({ id }: { id: string }) {
+  const searchParams = useSearchParams();
   const { data: story, isPending, isError } = useStory(id);
   const [userId, setUserId] = useState<string | null>(null);
   const toggleReaction = useToggleStoryReaction(id);
+  const markNotificationRead = useMarkNotificationRead();
   const queueRef = useRef<string[]>([]);
   const [isSpeaking, setIsSpeaking] = useState(false);
   const [ttsError, setTtsError] = useState<string | null>(null);
@@ -21,6 +39,32 @@ export function StoryDetailClient({ id }: { id: string }) {
       setUserId(null);
     }
   }, []);
+
+  useEffect(() => {
+    const notificationId = searchParams.get("notificationId");
+    if (!notificationId) return;
+    markNotificationRead.mutate(notificationId);
+  }, [markNotificationRead, searchParams]);
+
+  const stopSpeaking = () => {
+    if (typeof window === "undefined") return;
+    if (!("speechSynthesis" in window)) return;
+    window.speechSynthesis.cancel();
+    queueRef.current = [];
+    setIsSpeaking(false);
+  };
+
+  useEffect(() => {
+    return () => stopSpeaking();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  // If the user navigates to another story while TTS is playing,
+  // cancel immediately so audio never continues from the previous story.
+  useEffect(() => {
+    stopSpeaking();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [id]);
 
   const reactions = (story?.reactions as { id: string; type: string; userId: string }[] | undefined) ?? [];
   const myReaction = userId ? reactions.find((r) => r.userId === userId)?.type : null;
@@ -43,14 +87,14 @@ export function StoryDetailClient({ id }: { id: string }) {
   }
 
   const cover = story.cover ?? story.image;
-  const sections = (story.sections as { text: string; image?: string }[] | undefined) ?? [];
+  const sections = normalizeSections(story.sections);
   const hasSections = sections.length > 0;
   const s = {
     title: story.title,
     category: typeof story.category === "object" && story.category?.name ? story.category.name : (story as { category?: string }).category ?? "",
     publishedAt: story.publishedAt ?? story.year ?? "",
     author: story.author ?? "",
-    content: story.content ?? "",
+    content: typeof story.content === "string" ? story.content : String(story.content ?? ""),
     cover: cover && String(cover).trim() ? cover : "https://images.unsplash.com/photo-1503177119275-0aa32b3a9368?q=80&w=1200",
     source: (story as { source?: string }).source ?? "",
     externalSource: (story as { externalSource?: string }).externalSource ?? "",
@@ -60,26 +104,6 @@ export function StoryDetailClient({ id }: { id: string }) {
   const storyBodyText = hasSections
     ? sections.map((section) => section.text).join("\n\n").trim()
     : (s.content ?? "").trim();
-
-  const stopSpeaking = () => {
-    if (typeof window === "undefined") return;
-    if (!("speechSynthesis" in window)) return;
-    window.speechSynthesis.cancel();
-    queueRef.current = [];
-    setIsSpeaking(false);
-  };
-
-  useEffect(() => {
-    return () => stopSpeaking();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
-
-  // If the user navigates to another story while TTS is playing,
-  // cancel immediately so audio never continues from the previous story.
-  useEffect(() => {
-    stopSpeaking();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [id]);
 
   const chunkText = (text: string, maxChars = 2500) => {
     const paragraphs = text

@@ -125,7 +125,7 @@ export default function StoriesPage() {
               <motion.a 
                 layout
                 key={story.id} 
-                href={story.source === "EXTERNAL" && story.externalSource ? `/stories/external/${story.externalSource}/${encodeURIComponent(story.id)}` : `/stories/${story.id}`}
+                href={story.source === "EXTERNAL" && story.externalSource ? `/stories/external/${encodeURIComponent(story.externalSource)}/${encodeURIComponent(story.id)}` : `/stories/${story.id}`}
                 initial={{ opacity: 0, y: 20 }}
                 whileInView={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0, scale: 0.95 }}

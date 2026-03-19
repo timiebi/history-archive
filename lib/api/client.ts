@@ -151,6 +151,16 @@ export interface MeUser {
   createdAt?: string;
 }
 
+export interface UserNotification {
+  id: string;
+  title: string;
+  message: string;
+  type: string;
+  read: boolean;
+  createdAt: string;
+  storyId?: string | null;
+}
+
 export async function getMe(): Promise<MeUser> {
   const { data } = await api.get<MeUser>("/users/me");
   return data;
@@ -169,6 +179,26 @@ export interface ChangePasswordBody {
 export async function changePassword(body: ChangePasswordBody): Promise<{ message?: string }> {
   const { data } = await api.patch<{ message?: string }>("/users/me/password", body);
   return data;
+}
+
+export async function getNotifications(limit = 30): Promise<{ items: UserNotification[]; unreadCount: number }> {
+  const { data } = await api.get<{ items?: UserNotification[]; unreadCount?: number }>("/notifications", {
+    params: { limit },
+  });
+  return {
+    items: Array.isArray(data?.items) ? data.items : [],
+    unreadCount: Number(data?.unreadCount ?? 0),
+  };
+}
+
+export async function markAllNotificationsRead(): Promise<{ updated: number }> {
+  const { data } = await api.patch<{ updated?: number }>("/notifications/read-all");
+  return { updated: Number(data?.updated ?? 0) };
+}
+
+export async function markNotificationRead(notificationId: string): Promise<{ updated: number }> {
+  const { data } = await api.patch<{ updated?: number }>(`/notifications/${encodeURIComponent(notificationId)}/read`);
+  return { updated: Number(data?.updated ?? 0) };
 }
 
 // ——— Artifacts (GET /artifacts returns array when no query) ———
