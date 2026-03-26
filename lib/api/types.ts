@@ -44,6 +44,12 @@ export interface Story {
   publishedAt?: string;
   author?: string;
   source?: "CONTRIBUTOR" | "ADMIN" | "EXTERNAL";
+  status?: "PENDING" | "APPROVED" | "REJECTED" | "NEEDS_CHANGES";
+  visibility?: "PUBLIC" | "RESTRICTED" | "PRIVATE";
+  consentStatus?: "UNKNOWN" | "REQUESTED" | "GRANTED" | "DENIED";
+  verificationStatus?: "UNVERIFIED" | "COMMUNITY_VERIFIED" | "EXPERT_REVIEWED";
+  provenance?: Record<string, unknown>;
+  reviewNotes?: string;
   externalSource?: string;
   externalId?: string;
   categoryId?: string;
@@ -126,6 +132,12 @@ export interface Culture {
   description?: string;
   image?: string;
   timelineId?: string;
+  status?: "PENDING" | "APPROVED" | "REJECTED" | "NEEDS_CHANGES";
+  visibility?: "PUBLIC" | "RESTRICTED" | "PRIVATE";
+  consentStatus?: "UNKNOWN" | "REQUESTED" | "GRANTED" | "DENIED";
+  verificationStatus?: "UNVERIFIED" | "COMMUNITY_VERIFIED" | "EXPERT_REVIEWED";
+  provenance?: Record<string, unknown>;
+  reviewNotes?: string;
   timeline?: { id: string; name: string; startYear?: number; endYear?: number };
   [key: string]: unknown;
 }
@@ -141,6 +153,12 @@ export interface Manuscript {
   tags: string[];
   contentUrl?: string;
   timelineId?: string;
+  status?: "PENDING" | "APPROVED" | "REJECTED" | "NEEDS_CHANGES";
+  visibility?: "PUBLIC" | "RESTRICTED" | "PRIVATE";
+  consentStatus?: "UNKNOWN" | "REQUESTED" | "GRANTED" | "DENIED";
+  verificationStatus?: "UNVERIFIED" | "COMMUNITY_VERIFIED" | "EXPERT_REVIEWED";
+  provenance?: Record<string, unknown>;
+  reviewNotes?: string;
   timeline?: Timeline | null;
   createdAt?: string;
   updatedAt?: string;

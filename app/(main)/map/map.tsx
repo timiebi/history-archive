@@ -68,10 +68,6 @@ export function AfricaMap({ regions, activeNode, onHover, onClick }: MapProps) {
         />
       </svg>
 
-      {/* 3. COORDINATE HELPER (Only during development) */}
-      <div className="absolute bottom-4 left-4 font-mono text-[8px] text-stone-600 pointer-events-none">
-        RENDER_MODE: GEOSPATIAL_OVERLAY // V1.0
-      </div>
     </div>
   );
 }

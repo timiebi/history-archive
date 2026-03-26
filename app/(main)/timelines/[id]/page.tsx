@@ -42,7 +42,7 @@ export default function TimelineDetailPage() {
   if (!id) {
     return (
       <main className="min-h-screen bg-[#fafaf9] dark:bg-[#0c0a09] flex items-center justify-center">
-        <p className="font-mono text-[10px] uppercase tracking-widest text-stone-500">Invalid timeline</p>
+        <p className="text-sm text-stone-500">Invalid timeline link.</p>
       </main>
     );
   }
@@ -50,7 +50,7 @@ export default function TimelineDetailPage() {
   if (isPending) {
     return (
       <main className="min-h-screen bg-[#fafaf9] dark:bg-[#0c0a09] flex items-center justify-center">
-        <p className="font-mono text-[10px] uppercase tracking-widest text-stone-500">Loading…</p>
+        <p className="text-sm text-stone-500">Loading timeline…</p>
       </main>
     );
   }
@@ -58,9 +58,9 @@ export default function TimelineDetailPage() {
   if (isError || !timeline) {
     return (
       <main className="min-h-screen bg-[#fafaf9] dark:bg-[#0c0a09] flex flex-col items-center justify-center px-6">
-        <p className="font-mono text-[10px] uppercase tracking-widest text-stone-500 mb-4">Timeline not found</p>
-        <Link href="/timelines" className="text-orange-700 font-mono text-xs uppercase hover:underline">
-          Back to timelines
+        <p className="text-sm text-stone-500 mb-4">We couldn&apos;t find that timeline.</p>
+        <Link href="/timelines" className="text-orange-700 text-sm font-medium hover:underline">
+          ← All timelines
         </Link>
       </main>
     );
@@ -105,7 +105,7 @@ export default function TimelineDetailPage() {
                     className="block border border-stone-200 dark:border-stone-800 rounded-none p-5 hover:border-orange-400 dark:hover:border-orange-600 hover:bg-stone-50 dark:hover:bg-stone-900/50 transition-colors"
                   >
                     <h3 className="font-semibold text-stone-900 dark:text-white">{s.title}</h3>
-                    <div className="flex flex-wrap gap-x-4 gap-y-1 mt-2 text-stone-500 font-mono text-[10px] uppercase tracking-wider">
+                    <div className="flex flex-wrap gap-x-4 gap-y-1 mt-2 text-stone-500 text-xs">
                       {s.category?.name && <span>{s.category.name}</span>}
                       {s.country?.name && <span>{s.country.name}</span>}
                     </div>
@@ -117,11 +117,11 @@ export default function TimelineDetailPage() {
         </section>
 
         <section className="mb-14">
-          <h2 className="flex items-center gap-2 text-stone-700 dark:text-stone-300 font-black uppercase tracking-widest text-xs mb-6">
-            <BookOpen size={16} /> Library
+          <h2 className="flex items-center gap-2 text-stone-800 dark:text-stone-200 font-semibold text-base mb-6">
+            <BookOpen size={18} aria-hidden /> Library
           </h2>
           {manuscripts.length === 0 ? (
-            <p className="text-stone-500 font-mono text-sm">No manuscripts linked to this timeline.</p>
+            <p className="text-stone-500 text-sm">No library items linked to this timeline yet.</p>
           ) : (
             <ul className="space-y-3">
               {manuscripts.map((m) => (
@@ -131,7 +131,7 @@ export default function TimelineDetailPage() {
                     className="block border border-stone-200 dark:border-stone-800 rounded-none p-4 hover:border-orange-400 dark:hover:border-orange-600 transition-colors"
                   >
                     <span className="font-medium text-stone-900 dark:text-white">{m.title}</span>
-                    <span className="text-stone-500 font-mono text-[10px] ml-2">— {m.author} · {m.era}</span>
+                    <span className="text-stone-500 text-xs ml-2">— {m.author} · {m.era}</span>
                   </Link>
                 </li>
               ))}
@@ -140,11 +140,11 @@ export default function TimelineDetailPage() {
         </section>
 
         <section>
-          <h2 className="flex items-center gap-2 text-stone-700 dark:text-stone-300 font-black uppercase tracking-widest text-xs mb-6">
-            <Archive size={16} /> Artifacts
+          <h2 className="flex items-center gap-2 text-stone-800 dark:text-stone-200 font-semibold text-base mb-6">
+            <Archive size={18} aria-hidden /> Artifacts
           </h2>
           {artifacts.length === 0 ? (
-            <p className="text-stone-500 font-mono text-sm">No artifacts linked to this timeline.</p>
+            <p className="text-stone-500 text-sm">No artifacts linked to this timeline yet.</p>
           ) : (
             <ul className="grid gap-4 sm:grid-cols-2">
               {artifacts.map((a) => (
@@ -160,7 +160,7 @@ export default function TimelineDetailPage() {
                     ) : null}
                     <div className="p-4">
                       <span className="font-medium text-stone-900 dark:text-white">{a.name}</span>
-                      <p className="text-stone-500 font-mono text-[10px] mt-1">{a.origin} · {a.year}</p>
+                      <p className="text-stone-500 text-xs mt-1">{a.origin} · {a.year}</p>
                     </div>
                   </Link>
                 </li>
@@ -171,9 +171,7 @@ export default function TimelineDetailPage() {
 
         {source === "EXTERNAL_FALLBACK" ? (
           <section className="mt-14 p-6 border border-stone-200 dark:border-stone-800">
-            <p className="text-stone-500 font-mono text-[10px] uppercase tracking-widest mb-2">
-              Context (reference only)
-            </p>
+            <p className="text-stone-500 text-xs font-medium mb-2">Reference context</p>
             <p className="text-stone-600 dark:text-stone-400 text-sm">
               Additional context may be available from external sources. All content is displayed in-app; no external links.
             </p>

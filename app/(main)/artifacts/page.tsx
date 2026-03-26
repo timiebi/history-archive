@@ -79,17 +79,15 @@ function ArtifactCard({ artifact }: { artifact: any }) {
           style={{ transform: "translateZ(40px)" }}
           className="absolute inset-0 z-20 p-10 flex flex-col justify-end bg-linear-to-t from-black/80 via-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500"
         >
-          <span className="text-orange-500 font-mono text-[10px] tracking-[0.3em] uppercase mb-3">
-            {artifact.origin} — {artifact.year}
+          <span className="text-orange-400 text-sm font-medium mb-2 block">
+            {artifact.origin} · {artifact.year}
           </span>
-          <h3 className="text-white text-3xl font-black uppercase italic tracking-tighter leading-none mb-4">
+          <h3 className="text-white text-2xl md:text-3xl font-bold tracking-tight leading-tight mb-4">
             {artifact.name}
           </h3>
           <div className="flex items-center gap-3">
-            <div className="h-px w-8 bg-orange-800" />
-            <p className="text-stone-300 text-[10px] font-black uppercase tracking-widest">
-              View Analysis_
-            </p>
+            <div className="h-px w-8 bg-orange-800" aria-hidden />
+            <p className="text-stone-300 text-sm font-medium">View details</p>
           </div>
         </div>
 
@@ -140,7 +138,7 @@ export default function ArtifactsPage() {
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-px bg-stone-200 dark:bg-stone-800 border border-stone-200 dark:border-stone-800">
           {artifacts.length === 0 ? (
             <div className="col-span-full bg-[#fafaf9] dark:bg-[#0c0a09] p-20 text-center">
-              <p className="font-mono text-sm uppercase tracking-widest text-stone-500">No artifacts in the vault yet.</p>
+              <p className="text-sm text-stone-500">No artifacts in the collection yet.</p>
             </div>
           ) : (
             artifacts.map((artifact) => (

@@ -14,15 +14,18 @@ export function CultureOverlay({ data, onCloseAction }: { data: any; onCloseActi
           transition={{ type: "spring", damping: 30, stiffness: 200 }}
           className="absolute top-0 right-0 h-full w-full md:w-96 bg-[#0c0a09]/95 backdrop-blur-xl border-l border-stone-800 z-50 p-12 flex flex-col shadow-2xl"
         >
-          <button onClick={onCloseAction} className="self-end text-stone-500 hover:text-white transition-colors mb-16">
-            <X size={20} />
+          <button
+            type="button"
+            onClick={onCloseAction}
+            className="self-end text-stone-500 hover:text-white transition-colors mb-12 p-1 rounded-sm focus:outline-none focus-visible:ring-2 focus-visible:ring-orange-600"
+            aria-label="Close panel"
+          >
+            <X size={20} aria-hidden />
           </button>
 
-          <span className="text-[10px] font-black uppercase tracking-[0.4em] text-orange-700 mb-4 block">
-            System_Analysis // Data_Node
-          </span>
-          
-          <h2 className="text-5xl font-black uppercase italic tracking-tighter text-white mb-12 leading-[0.8]">
+          <span className="text-xs font-semibold text-orange-500 mb-3 block">Overview</span>
+
+          <h2 className="text-4xl md:text-5xl font-bold tracking-tight text-white mb-10 leading-tight">
             {data.name}
           </h2>
 
@@ -30,33 +33,30 @@ export function CultureOverlay({ data, onCloseAction }: { data: any; onCloseActi
             <div className="flex gap-4">
               <Landmark size={18} className="text-orange-700 shrink-0" />
               <div>
-                <h4 className="text-[9px] font-mono text-stone-600 uppercase tracking-widest mb-1">Political Center</h4>
-                <p className="text-white font-serif italic text-lg">{data.capital}</p>
+                <h4 className="text-xs font-medium text-stone-500 mb-1">Capital or center</h4>
+                <p className="text-white text-base leading-snug">{data.capital}</p>
               </div>
             </div>
 
             <div className="flex gap-4">
               <Languages size={18} className="text-orange-700 shrink-0" />
               <div>
-                <h4 className="text-[9px] font-mono text-stone-600 uppercase tracking-widest mb-1">Primary Tongue</h4>
-                <p className="text-white font-serif italic text-lg">{data.language}</p>
+                <h4 className="text-xs font-medium text-stone-500 mb-1">Languages</h4>
+                <p className="text-white text-base leading-snug">{data.language}</p>
               </div>
             </div>
 
             <div className="pt-10 border-t border-stone-900">
                <div className="flex items-center gap-2 mb-4">
                  <Info size={14} className="text-stone-600" />
-                 <span className="text-[9px] font-black uppercase tracking-widest text-stone-600">Briefing</span>
+                 <span className="text-xs font-semibold text-stone-500">About</span>
                </div>
-               <p className="text-stone-400 font-serif italic leading-relaxed text-lg">
+               <p className="text-stone-300 leading-relaxed text-sm md:text-base">
                  {data.desc ?? (data as { description?: string }).description ?? ""}
                </p>
             </div>
           </div>
 
-          <button className="w-full py-4 bg-orange-800 text-white text-[10px] font-black uppercase tracking-[0.2em] hover:bg-orange-700 transition-colors">
-            Access Full Chronicle
-          </button>
         </motion.div>
       )}
     </AnimatePresence>

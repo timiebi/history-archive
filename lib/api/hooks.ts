@@ -1,50 +1,56 @@
 "use client";
 
 import {
-  useQuery,
-  useQueryClient,
-  useMutation,
-  type UseQueryOptions,
-  type UseMutationOptions,
+    useMutation,
+    useQuery,
+    useQueryClient,
+    type UseMutationOptions,
+    type UseQueryOptions,
 } from "@tanstack/react-query";
 import {
-  getCategories,
-  getCountries,
-  getCountryById,
-  getStories,
-  getStoryById,
-  getStoryByExternalId,
-  createStory,
-  toggleStoryReaction,
-  authLogin,
-  authSignUp,
-  authForgotPassword,
-  authResetPassword,
-  getContributors,
-  getArtifacts,
-  getCultures,
-  getTimelines,
-  getTimelineById,
-  getContributorOverview,
-  getMe,
-  updateMe,
-  changePassword,
-  getNotifications,
-  markNotificationRead,
-  markAllNotificationsRead,
-  getLibrary,
-  getManuscriptById,
-  type AuthLoginBody,
-  type AuthSignUpBody,
-  type CreateStoryBody,
-  type Artifact,
-  type ReactionType,
-  type ContributorOverviewResponse,
-  type MeUser,
-  type UserNotification,
-  type ChangePasswordBody,
+    authForgotPassword,
+    authLogin,
+    authResetPassword,
+    authSignUp,
+    adminGetCultures,
+    adminGetStories,
+    adminModerateCulture,
+    adminModerateStory,
+    changePassword,
+    createStory,
+    getArtifacts,
+    getCategories,
+    getContributorOverview,
+    getContributors,
+    getCountries,
+    getCountryById,
+    getCultures,
+    getLibrary,
+    getManuscriptById,
+    getMe,
+    getNotifications,
+    getStories,
+    getStoryByExternalId,
+    getStoryById,
+    getTimelineById,
+    getTimelines,
+    markAllNotificationsRead,
+    markNotificationRead,
+    toggleStoryReaction,
+    updateMe,
+    type Artifact,
+    type AdminCultureModerationItem,
+    type AdminStoryModerationItem,
+    type AuthLoginBody,
+    type AuthSignUpBody,
+    type ChangePasswordBody,
+    type ContributorOverviewResponse,
+    type CreateStoryBody,
+    type MeUser,
+    type ReactionType,
+    type UserNotification,
 } from "./client";
-import type { Category, Country, Story, Timeline, TimelineDetail, Manuscript, Culture } from "./types";
+import type { Category, Country, Culture, Manuscript, Story, Timeline, TimelineDetail } from "./types";
 
 const keys = {
   categories: ["api", "categories"] as const,
@@ -62,6 +68,8 @@ const keys = {
   contributorOverview: ["api", "contributors", "me", "overview"] as const,
   me: ["api", "users", "me"] as const,
   notifications: ["api", "notifications"] as const,
+  adminStories: (params?: Record<string, unknown>) => ["api", "admin", "stories", params ?? {}] as const,
+  adminCultures: (params?: Record<string, unknown>) => ["api", "admin", "cultures", params ?? {}] as const,
   library: ["api", "library"] as const,
   manuscript: (id: string) => ["api", "library", id] as const,
 };
@@ -386,6 +394,82 @@ export function useMarkNotificationRead(
     mutationFn: (notificationId: string) => markNotificationRead(notificationId),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: keys.notifications });
+    },
+    ...options,
+  });
+}
+
+export function useAdminStories(
+  params?: { page?: number; limit?: number; status?: "PENDING" | "APPROVED" | "REJECTED" | "NEEDS_CHANGES" },
+  options?: Omit<UseQueryOptions<{ items: AdminStoryModerationItem[]; total: number }, Error>, "queryKey" | "queryFn">,
+) {
+  return useQuery({
+    queryKey: keys.adminStories(params),
+    queryFn: () => adminGetStories(params),
+    ...options,
+  });
+}
+
+export function useModerateStory(
+  options?: UseMutationOptions<
+    { message: string },
+    Error,
+    {
+      storyId: string;
+      body: {
+        status?: "PENDING" | "APPROVED" | "REJECTED" | "NEEDS_CHANGES";
+        visibility?: "PUBLIC" | "RESTRICTED" | "PRIVATE";
+        consentStatus?: "UNKNOWN" | "REQUESTED" | "GRANTED" | "DENIED";
+        verificationStatus?: "UNVERIFIED" | "COMMUNITY_VERIFIED" | "EXPERT_REVIEWED";
+        reviewNotes?: string;
+      };
+    }
+  >,
+) {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({ storyId, body }) => adminModerateStory(storyId, body),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["api", "admin", "stories"] });
+      queryClient.invalidateQueries({ queryKey: keys.stories() });
+    },
+    ...options,
+  });
+}
+
+export function useAdminCultures(
+  params?: { page?: number; limit?: number; status?: "PENDING" | "APPROVED" | "REJECTED" | "NEEDS_CHANGES" },
+  options?: Omit<UseQueryOptions<{ items: AdminCultureModerationItem[]; total: number }, Error>, "queryKey" | "queryFn">,
+) {
+  return useQuery({
+    queryKey: keys.adminCultures(params),
+    queryFn: () => adminGetCultures(params),
+    ...options,
+  });
+}
+
+export function useModerateCulture(
+  options?: UseMutationOptions<
+    { message: string },
+    Error,
+    {
+      cultureId: string;
+      body: {
+        status?: "PENDING" | "APPROVED" | "REJECTED" | "NEEDS_CHANGES";
+        visibility?: "PUBLIC" | "RESTRICTED" | "PRIVATE";
+        consentStatus?: "UNKNOWN" | "REQUESTED" | "GRANTED" | "DENIED";
+        verificationStatus?: "UNVERIFIED" | "COMMUNITY_VERIFIED" | "EXPERT_REVIEWED";
+        reviewNotes?: string;
+      };
+    }
+  >,
+) {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({ cultureId, body }) => adminModerateCulture(cultureId, body),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["api", "admin", "cultures"] });
+      queryClient.invalidateQueries({ queryKey: keys.cultures() });
     },
     ...options,
   });

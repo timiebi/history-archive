@@ -7,10 +7,9 @@ import Link from "next/link";
 import { useLibrary } from "@/lib/api";
 
 export default function LibraryPage() {
-  const [hoveredId, setHoveredId] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
   const [filterEra, setFilterEra] = useState("All");
-  const { data, isPending, isSuccess } = useLibrary();
+  const { data, isPending } = useLibrary();
   const manuscripts = data?.items ?? [];
   const filteredManuscripts = useMemo(() => {
     if (!manuscripts.length) return [];
@@ -34,7 +33,9 @@ export default function LibraryPage() {
       {/* Editorial Header */}
       <header className="p-8 md:p-12 border-b border-stone-300 flex justify-between items-end">
         <div>
-          <span className="text-orange-700 font-black tracking-[0.4em] uppercase text-[10px] mb-4 block">Archive_Section_03</span>
+          <span className="text-orange-700 font-black tracking-[0.4em] uppercase text-[10px] mb-4 block">
+            Archive_Section_03
+          </span>
           <h1 className="text-6xl md:text-8xl font-black uppercase italic tracking-tighter leading-none">
             Digital <span className="text-stone-400">Folios.</span>
           </h1>
@@ -54,8 +55,8 @@ export default function LibraryPage() {
             type="text"
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            placeholder="Search Manuscripts..."
-            className="bg-transparent border-none outline-none font-serif italic text-lg w-64 md:w-96"
+            placeholder="Search by title, author, or keywords…"
+            className="bg-transparent border-none outline-none text-base w-64 md:w-96 text-stone-900 placeholder:text-stone-400"
           />
         </div>
         <div className="flex gap-8 flex-wrap">
@@ -63,7 +64,7 @@ export default function LibraryPage() {
             <button
               key={filter}
               onClick={() => setFilterEra(filter)}
-              className={`text-[10px] font-black uppercase tracking-widest transition-colors ${filterEra === filter ? "text-orange-700" : "hover:text-orange-700"}`}
+              className={`text-xs font-semibold tracking-tight transition-colors ${filterEra === filter ? "text-orange-700" : "text-stone-500 hover:text-orange-700"}`}
             >
               {filter}
             </button>
@@ -75,32 +76,36 @@ export default function LibraryPage() {
       <section className="p-8 md:p-12 grid grid-cols-1 lg:grid-cols-2 gap-px bg-stone-300">
         {isPending ? (
           <div className="col-span-full bg-[#f4f1ea] p-20 text-center">
-            <p className="font-mono text-sm uppercase tracking-widest text-stone-500">Loading manuscripts…</p>
+            <p className="text-sm text-stone-500">Loading manuscripts…</p>
           </div>
         ) : filteredManuscripts.length === 0 ? (
           <div className="col-span-full bg-[#f4f1ea] p-20 text-center">
-            <p className="font-mono text-sm uppercase tracking-widest text-stone-500">
+            <p className="text-sm text-stone-500">
               {manuscripts.length === 0 ? "No manuscripts in the library yet." : "No manuscripts match your search."}
             </p>
           </div>
         ) : (
           filteredManuscripts.map((doc) => (
             <Link key={doc.id} href={`/library/${doc.id}`}>
-              <motion.div
-                onMouseEnter={() => setHoveredId(doc.id)}
-                onMouseLeave={() => setHoveredId(null)}
-                className="bg-[#f4f1ea] p-10 flex flex-col justify-between group cursor-pointer hover:bg-white transition-colors duration-500"
-              >
+              <motion.div className="bg-[#f4f1ea] p-10 flex flex-col justify-between group cursor-pointer hover:bg-white transition-colors duration-500">
               <div>
                 <div className="flex justify-between items-start mb-12">
                   <div className="p-4 bg-stone-100 group-hover:bg-orange-50 transition-colors">
                     <BookOpen size={24} className="text-stone-400 group-hover:text-orange-700 transition-colors" />
                   </div>
-                  <span className="font-mono text-[10px] text-stone-400 tracking-tighter">REF_{doc.id.slice(0, 8).toUpperCase()}</span>
+                  <span className="text-[10px] text-stone-400 tabular-nums">
+                    Ref. {doc.id.slice(0, 8).toUpperCase()}
+                  </span>
                 </div>
-                <span className="text-[10px] font-black uppercase tracking-[0.3em] text-orange-700 mb-2 block">{doc.timeline?.name ?? doc.era}</span>
-                <h2 className="text-4xl md:text-5xl font-black uppercase italic tracking-tighter mb-6 group-hover:translate-x-2 transition-transform duration-500">{doc.title}</h2>
-                <p className="text-stone-600 font-serif italic text-lg leading-relaxed mb-8 max-w-md">"{doc.summary}"</p>
+                <span className="text-xs font-semibold text-orange-800 mb-2 block">
+                  {doc.timeline?.name ?? doc.era}
+                </span>
+                <h2 className="text-3xl md:text-4xl font-bold tracking-tight mb-4 group-hover:translate-x-1 transition-transform duration-300">
+                  {doc.title}
+                </h2>
+                <p className="text-stone-600 text-base leading-relaxed mb-8 max-w-md line-clamp-4">
+                  {doc.summary}
+                </p>
               </div>
               <div className="flex items-center justify-between pt-8 border-t border-stone-200">
                 <div className="flex gap-4 flex-wrap">
@@ -117,9 +122,10 @@ export default function LibraryPage() {
 
       {/* Footer Meta */}
       <footer className="p-12 text-center border-t border-stone-300">
-         <p className="text-stone-400 font-mono text-[9px] uppercase tracking-[0.5em]">
-            Digital Preservation // Transcription Phase 04 complete
-         </p>
+        <p className="text-stone-500 text-xs">
+          Descriptions and scans are added as the archive grows. Always cite the original holding institution
+          when you use this material elsewhere.
+        </p>
       </footer>
     </main>
   );

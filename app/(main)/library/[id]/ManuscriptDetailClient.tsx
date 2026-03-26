@@ -10,7 +10,7 @@ export function ManuscriptDetailClient({ id }: { id: string }) {
   if (isPending) {
     return (
       <main className="min-h-screen bg-[#f4f1ea] text-stone-900 flex items-center justify-center">
-        <p className="font-mono text-sm uppercase tracking-widest text-stone-500">Loading manuscript…</p>
+        <p className="text-sm text-stone-500">Loading manuscript…</p>
       </main>
     );
   }
@@ -18,8 +18,8 @@ export function ManuscriptDetailClient({ id }: { id: string }) {
   if (isError || !manuscript) {
     return (
       <main className="min-h-screen bg-[#f4f1ea] text-stone-900 flex flex-col items-center justify-center gap-6 p-8">
-        <p className="font-mono text-sm uppercase tracking-widest text-stone-500 text-center">Manuscript not found.</p>
-        <Link href="/library" className="text-orange-700 font-mono text-[10px] uppercase tracking-widest hover:underline flex items-center gap-2">
+        <p className="text-sm text-stone-500 text-center">Manuscript not found.</p>
+        <Link href="/library" className="text-orange-700 text-sm font-medium hover:underline flex items-center gap-2">
           <ArrowLeft size={14} /> Back to Library
         </Link>
       </main>
@@ -38,7 +38,9 @@ export function ManuscriptDetailClient({ id }: { id: string }) {
           <Link href="/library" className="p-2 text-stone-500 hover:text-orange-700 transition-colors" aria-label="Back to Library">
             <ArrowLeft size={20} />
           </Link>
-          <span className="font-mono text-[10px] text-stone-400 tracking-tighter">REF_{manuscript.id.slice(0, 8).toUpperCase()}</span>
+          <span className="text-xs text-stone-400 tabular-nums">
+            Ref. {manuscript.id.slice(0, 8).toUpperCase()}
+          </span>
         </div>
       </header>
 
@@ -48,21 +50,21 @@ export function ManuscriptDetailClient({ id }: { id: string }) {
             <BookOpen size={32} className="text-orange-700" />
           </div>
           <div>
-            <span className="text-[10px] font-black uppercase tracking-[0.3em] text-orange-700 mb-2 block">{timelineName}</span>
-            <h1 className="text-4xl md:text-6xl font-black uppercase italic tracking-tighter leading-tight mb-4">
+            <span className="text-xs font-semibold text-orange-800 mb-2 block">{timelineName}</span>
+            <h1 className="text-4xl md:text-5xl font-bold tracking-tight leading-tight mb-4">
               {manuscript.title}
             </h1>
-            <p className="text-stone-600 font-mono text-sm uppercase tracking-widest">By {manuscript.author}</p>
+            <p className="text-stone-600 text-sm">
+              By <span className="font-medium">{manuscript.author}</span>
+            </p>
             {manuscript.pages != null && (
-              <p className="text-stone-500 font-mono text-xs mt-1">{manuscript.pages} pages</p>
+              <p className="text-stone-500 text-sm mt-1">{manuscript.pages} pages</p>
             )}
           </div>
         </div>
 
         <div className="prose prose-stone max-w-none">
-          <p className="font-serif italic text-lg leading-relaxed text-stone-700">
-            "{manuscript.summary}"
-          </p>
+          <p className="text-lg leading-relaxed text-stone-700">{manuscript.summary}</p>
         </div>
 
         {tags.length > 0 && (
@@ -77,8 +79,8 @@ export function ManuscriptDetailClient({ id }: { id: string }) {
       </article>
 
       <footer className="border-t border-stone-300 py-12 text-center">
-        <Link href="/library" className="text-stone-500 font-mono text-[9px] uppercase tracking-widest hover:text-orange-700">
-          ← Back to Digital Folios
+        <Link href="/library" className="text-stone-500 text-sm hover:text-orange-700">
+          ← Back to library
         </Link>
       </footer>
     </main>

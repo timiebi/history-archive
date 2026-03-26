@@ -1,15 +1,21 @@
-
 "use client";
 
 import { useCategories, useStories } from "@/lib/api";
 import { storyToStoryDisplay, type StoryDisplay } from "@/lib/api/mappers";
 import { AnimatePresence, motion, useScroll, useSpring, useTransform } from "framer-motion";
-import { useMemo, useState } from "react";
+import { useSearchParams } from "next/navigation";
+import { Suspense, useEffect, useMemo, useState } from "react";
 
-export default function StoriesPage() {
+function StoriesPageContent() {
+  const searchParams = useSearchParams();
   const [activeCategory, setActiveCategory] = useState("All");
   const [searchQuery, setSearchQuery] = useState("");
   const [visibleCount, setVisibleCount] = useState(4);
+
+  useEffect(() => {
+    const q = searchParams.get("q");
+    setSearchQuery(q != null ? q : "");
+  }, [searchParams]);
 
   const { data: storiesData, isSuccess: storiesOk, isPending: storiesPending } = useStories();
   const { data: categoriesData, isSuccess: categoriesOk } = useCategories();
@@ -33,11 +39,15 @@ export default function StoriesPage() {
   const mapY = useTransform(scrollYProgress, [0, 0.5, 1], ["0%", "3%", "0%"]);
 
   const filteredStories = useMemo(() => {
+    const q = searchQuery.toLowerCase().trim();
     return storiesList.filter((story) => {
       const matchesCategory = activeCategory === "All" || story.category === activeCategory;
       const matchesSearch =
-        story.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        (story.excerpt ?? "").toLowerCase().includes(searchQuery.toLowerCase());
+        q === "" ||
+        story.title.toLowerCase().includes(q) ||
+        (story.excerpt ?? "").toLowerCase().includes(q) ||
+        (story.region ?? "").toLowerCase().includes(q) ||
+        (story.category ?? "").toLowerCase().includes(q);
       return matchesCategory && matchesSearch;
     });
   }, [activeCategory, searchQuery, storiesList]);
@@ -81,12 +91,12 @@ export default function StoriesPage() {
           </motion.div>
 
           <div className="w-full md:w-80 relative group">
-            <input 
-              type="text"
-              placeholder="SEARCH ARCHIVE_"
+            <input
+              type="search"
+              placeholder="Search by title, region, or topic…"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full bg-transparent border-b border-stone-300 dark:border-stone-800 py-2 font-mono text-[10px] uppercase tracking-widest focus:border-orange-800 outline-none transition-colors"
+              className="w-full bg-transparent border-b border-stone-300 dark:border-stone-800 py-2 text-sm text-stone-800 dark:text-stone-200 placeholder:text-stone-400 placeholder:text-xs focus:border-orange-800 outline-none transition-colors"
             />
             <div className="absolute bottom-0 left-0 h-0.5 bg-orange-800 w-0 group-focus-within:w-full transition-[width] duration-300" />
           </div>
@@ -208,5 +218,19 @@ export default function StoriesPage() {
         )}
       </section>
     </main>
+  );
+}
+
+export default function StoriesPage() {
+  return (
+    <Suspense
+      fallback={
+        <main className="min-h-screen bg-[#fafaf9] dark:bg-[#0c0a09] flex items-center justify-center">
+          <p className="text-stone-500 text-sm">Loading stories…</p>
+        </main>
+      }
+    >
+      <StoriesPageContent />
+    </Suspense>
   );
 }

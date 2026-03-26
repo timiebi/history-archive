@@ -13,8 +13,10 @@
   --color-background: var(--background);
   --color-foreground: var(--foreground);
 
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+  /* Injected on <html> via app/layout.tsx (Geist + Source Serif 4) */
+  --font-sans: var(--font-geist-sans), ui-sans-serif, system-ui, sans-serif;
+  --font-mono: var(--font-geist-mono), ui-monospace, monospace;
+  --font-serif: var(--font-source-serif), ui-serif, Georgia, Cambria, "Times New Roman", serif;
 
   --color-primary: var(--primary);
   --color-primary-foreground: var(--primary-foreground);
@@ -153,6 +155,20 @@
 }
 .animate-scan-line {
   animation: scan-line 4s linear infinite;
+}
+
+@keyframes spin-slow {
+  to {
+    transform: rotate(360deg);
+  }
+}
+.animate-spin-slow {
+  animation: spin-slow 24s linear infinite;
+}
+@media (prefers-reduced-motion: reduce) {
+  .animate-spin-slow {
+    animation: none;
+  }
 }
 
 .mask-africa-fade {

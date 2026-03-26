@@ -4,9 +4,9 @@
  * Routes: POST /auth/signup, POST /auth/login, GET /api/categories, GET /api/countries, GET /api/stories, etc.
  */
 
-import axios, { type AxiosError } from "axios";
 import { AUTH_TOKEN_KEY, AUTH_USER_KEY } from "@/lib/constants";
-import type { ApiError, Manuscript, Timeline, TimelineDetail, Culture } from "./types";
+import axios, { type AxiosError } from "axios";
+import type { ApiError, Culture, Manuscript, Timeline, TimelineDetail } from "./types";
 
 function getBaseUrl(): string {
   const url = process.env.NEXT_PUBLIC_API_URL ?? "";
@@ -16,7 +16,7 @@ function getBaseUrl(): string {
 export const api = axios.create({
   baseURL: getBaseUrl(),
   headers: { "Content-Type": "application/json" },
-  timeout: 15000,
+  // timeout: 15000,
 });
 
 // Ensure every request uses current NEXT_PUBLIC_API_URL from env and Bearer token when available
@@ -366,6 +366,19 @@ export interface CreateStoryBody {
   timelineDescription?: string;
   timelineStartYear?: number;
   timelineEndYear?: number;
+  visibility?: "PUBLIC" | "RESTRICTED" | "PRIVATE";
+  consentStatus?: "UNKNOWN" | "REQUESTED" | "GRANTED" | "DENIED";
+  verificationStatus?: "UNVERIFIED" | "COMMUNITY_VERIFIED" | "EXPERT_REVIEWED";
+  provenance?: {
+    sourceType?: string;
+    sourceName?: string;
+    sourceContact?: string;
+    collectionLocation?: string;
+    interviewDate?: string;
+    interviewerName?: string;
+    verificationMethod?: string;
+    notes?: string;
+  };
 }
 
 export async function createStory(body: CreateStoryBody): Promise<Record<string, unknown>> {
@@ -402,6 +415,19 @@ export interface CreateCultureInput {
   /** If omitted and countryId is set, backend uses the country flag. */
   image?: string;
   countryId?: string;
+  visibility?: "PUBLIC" | "RESTRICTED" | "PRIVATE";
+  consentStatus?: "UNKNOWN" | "REQUESTED" | "GRANTED" | "DENIED";
+  verificationStatus?: "UNVERIFIED" | "COMMUNITY_VERIFIED" | "EXPERT_REVIEWED";
+  provenance?: {
+    sourceType?: string;
+    sourceName?: string;
+    sourceContact?: string;
+    collectionLocation?: string;
+    interviewDate?: string;
+    interviewerName?: string;
+    verificationMethod?: string;
+    notes?: string;
+  };
 }
 
 export async function createCulture(body: CreateCultureInput): Promise<Culture> {
@@ -442,6 +468,9 @@ export interface ContributorOverviewResponse {
     countryName: string | null;
     categoryName: string;
     source: string;
+    status: string;
+    visibility: string;
+    reviewNotes: string | null;
   }>;
   myTimelines: Array<{
     id: string;
@@ -455,6 +484,75 @@ export interface ContributorOverviewResponse {
 
 export async function getContributorOverview(): Promise<ContributorOverviewResponse> {
   const { data } = await api.get<ContributorOverviewResponse>("/contributors/me/overview");
+  return data;
+}
+
+export interface AdminStoryModerationItem {
+  id: string;
+  title: string;
+  author?: string;
+  source: string;
+  status: "PENDING" | "APPROVED" | "REJECTED" | "NEEDS_CHANGES";
+  visibility: "PUBLIC" | "RESTRICTED" | "PRIVATE";
+  consentStatus: "UNKNOWN" | "REQUESTED" | "GRANTED" | "DENIED";
+  verificationStatus: "UNVERIFIED" | "COMMUNITY_VERIFIED" | "EXPERT_REVIEWED";
+  createdAt: string;
+}
+
+export interface AdminCultureModerationItem {
+  id: string;
+  name: string;
+  region: string;
+  status: "PENDING" | "APPROVED" | "REJECTED" | "NEEDS_CHANGES";
+  visibility: "PUBLIC" | "RESTRICTED" | "PRIVATE";
+  consentStatus: "UNKNOWN" | "REQUESTED" | "GRANTED" | "DENIED";
+  verificationStatus: "UNVERIFIED" | "COMMUNITY_VERIFIED" | "EXPERT_REVIEWED";
+  createdAt: string;
+}
+
+export async function adminGetStories(params?: {
+  page?: number;
+  limit?: number;
+  status?: "PENDING" | "APPROVED" | "REJECTED" | "NEEDS_CHANGES";
+}): Promise<{ items: AdminStoryModerationItem[]; total: number }> {
+  const { data } = await api.get<{ items: AdminStoryModerationItem[]; total: number }>("/admin/stories", { params });
+  return data;
+}
+
+export async function adminModerateStory(
+  storyId: string,
+  body: {
+    status?: "PENDING" | "APPROVED" | "REJECTED" | "NEEDS_CHANGES";
+    visibility?: "PUBLIC" | "RESTRICTED" | "PRIVATE";
+    consentStatus?: "UNKNOWN" | "REQUESTED" | "GRANTED" | "DENIED";
+    verificationStatus?: "UNVERIFIED" | "COMMUNITY_VERIFIED" | "EXPERT_REVIEWED";
+    reviewNotes?: string;
+  },
+): Promise<{ message: string }> {
+  const { data } = await api.patch<{ message: string }>(`/admin/stories/${encodeURIComponent(storyId)}/status`, body);
+  return data;
+}
+
+export async function adminGetCultures(params?: {
+  page?: number;
+  limit?: number;
+  status?: "PENDING" | "APPROVED" | "REJECTED" | "NEEDS_CHANGES";
+}): Promise<{ items: AdminCultureModerationItem[]; total: number }> {
+  const { data } = await api.get<{ items: AdminCultureModerationItem[]; total: number }>("/admin/cultures", { params });
+  return data;
+}
+
+export async function adminModerateCulture(
+  cultureId: string,
+  body: {
+    status?: "PENDING" | "APPROVED" | "REJECTED" | "NEEDS_CHANGES";
+    visibility?: "PUBLIC" | "RESTRICTED" | "PRIVATE";
+    consentStatus?: "UNKNOWN" | "REQUESTED" | "GRANTED" | "DENIED";
+    verificationStatus?: "UNVERIFIED" | "COMMUNITY_VERIFIED" | "EXPERT_REVIEWED";
+    reviewNotes?: string;
+  },
+): Promise<{ message: string }> {
+  const { data } = await api.patch<{ message: string }>(`/admin/cultures/${encodeURIComponent(cultureId)}/status`, body);
   return data;
 }
 

@@ -1,11 +1,11 @@
 "use client";
 
-import { useContributorOverview } from "@/lib/api";
 import { Button } from "@/components/ui/button";
+import { useAdminCultures, useAdminStories, useContributorOverview, useModerateCulture, useModerateStory } from "@/lib/api";
 import { AUTH_TOKEN_KEY, AUTH_USER_KEY } from "@/lib/constants";
+import { Clock, FileText, LayoutDashboard, Plus, Settings, User } from "lucide-react";
 import Link from "next/link";
 import { useEffect, useState } from "react";
-import { LayoutDashboard, FileText, Clock, Plus, Settings, User } from "lucide-react";
 
 function formatYear(year: number): string {
   if (year < 0) return `${Math.abs(year)} BCE`;
@@ -48,6 +48,11 @@ export default function DashboardPage() {
   const { data: overview, isPending, isError } = useContributorOverview({
     enabled: mounted && !!canAccess && !!localStorage.getItem(AUTH_TOKEN_KEY),
   });
+  const isAdmin = user?.role === "ADMIN";
+  const { data: adminStories } = useAdminStories({ page: 1, limit: 8, status: "PENDING" }, { enabled: mounted && isAdmin });
+  const { data: adminCultures } = useAdminCultures({ page: 1, limit: 8, status: "PENDING" }, { enabled: mounted && isAdmin });
+  const moderateStory = useModerateStory();
+  const moderateCulture = useModerateCulture();
 
   if (!mounted || !user || !canAccess) {
     return (
@@ -145,6 +150,9 @@ export default function DashboardPage() {
                           {s.timelineName && <span>{s.timelineName}</span>}
                           {s.countryName && <span>{s.countryName}</span>}
                           <span>{s.categoryName}</span>
+                          <span>Status: {s.status}</span>
+                          <span>Visibility: {s.visibility}</span>
+                          {s.reviewNotes && <span className="normal-case text-amber-700 dark:text-amber-400">Note: {s.reviewNotes}</span>}
                         </div>
                       </Link>
                     </li>
@@ -152,6 +160,53 @@ export default function DashboardPage() {
                 </ul>
               )}
             </section>
+
+            {isAdmin && (
+              <section>
+                <h2 className="flex items-center gap-2 text-stone-700 dark:text-stone-300 font-black uppercase tracking-widest text-xs mb-4">
+                  Moderation queue
+                </h2>
+                <div className="grid gap-6">
+                  <div className="border border-stone-200 dark:border-stone-800 rounded-none p-4">
+                    <h3 className="font-semibold text-sm mb-3">Pending stories</h3>
+                    {(adminStories?.items?.length ?? 0) === 0 ? <p className="text-xs text-stone-500">No pending stories.</p> : (
+                      <ul className="space-y-2">
+                        {(adminStories?.items ?? []).map((s) => (
+                          <li key={s.id} className="border border-stone-200 dark:border-stone-800 p-3">
+                            <p className="text-sm font-medium">{s.title}</p>
+                            <p className="text-[11px] text-stone-500">{s.consentStatus} · {s.verificationStatus}</p>
+                            <div className="mt-2 flex flex-wrap gap-2">
+                              <Button variant="outline" className="rounded-none font-mono text-[10px] uppercase min-h-[36px]" onClick={() => moderateStory.mutate({ storyId: s.id, body: { status: "APPROVED", visibility: "PUBLIC" } })}>Approve public</Button>
+                              <Button variant="outline" className="rounded-none font-mono text-[10px] uppercase min-h-[36px]" onClick={() => moderateStory.mutate({ storyId: s.id, body: { status: "APPROVED", visibility: "RESTRICTED" } })}>Approve restricted</Button>
+                              <Button variant="outline" className="rounded-none font-mono text-[10px] uppercase min-h-[36px]" onClick={() => moderateStory.mutate({ storyId: s.id, body: { status: "NEEDS_CHANGES", reviewNotes: "Please add clearer provenance details." } })}>Needs changes</Button>
+                            </div>
+                          </li>
+                        ))}
+                      </ul>
+                    )}
+                  </div>
+
+                  <div className="border border-stone-200 dark:border-stone-800 rounded-none p-4">
+                    <h3 className="font-semibold text-sm mb-3">Pending cultures</h3>
+                    {(adminCultures?.items?.length ?? 0) === 0 ? <p className="text-xs text-stone-500">No pending cultures.</p> : (
+                      <ul className="space-y-2">
+                        {(adminCultures?.items ?? []).map((c) => (
+                          <li key={c.id} className="border border-stone-200 dark:border-stone-800 p-3">
+                            <p className="text-sm font-medium">{c.name}</p>
+                            <p className="text-[11px] text-stone-500">{c.region} · {c.consentStatus} · {c.verificationStatus}</p>
+                            <div className="mt-2 flex flex-wrap gap-2">
+                              <Button variant="outline" className="rounded-none font-mono text-[10px] uppercase min-h-[36px]" onClick={() => moderateCulture.mutate({ cultureId: c.id, body: { status: "APPROVED", visibility: "PUBLIC" } })}>Approve public</Button>
+                              <Button variant="outline" className="rounded-none font-mono text-[10px] uppercase min-h-[36px]" onClick={() => moderateCulture.mutate({ cultureId: c.id, body: { status: "APPROVED", visibility: "RESTRICTED" } })}>Approve restricted</Button>
+                              <Button variant="outline" className="rounded-none font-mono text-[10px] uppercase min-h-[36px]" onClick={() => moderateCulture.mutate({ cultureId: c.id, body: { status: "NEEDS_CHANGES", reviewNotes: "Please add clearer provenance details." } })}>Needs changes</Button>
+                            </div>
+                          </li>
+                        ))}
+                      </ul>
+                    )}
+                  </div>
+                </div>
+              </section>
+            )}
 
             {/* My Timelines */}
             <section>

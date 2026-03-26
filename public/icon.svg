@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" role="img" aria-label="Afri Archive">
+  <rect width="32" height="32" rx="7" fill="#1c1917"/>
+  <path
+    d="M16 7 9 24h3l1.4-3.2h7.2L22 24h3L16 7Zm-.2 6.2 2.6 6.1h-5.2l2.6-6.1Z"
+    fill="#ea580c"
+  />
+</svg>
