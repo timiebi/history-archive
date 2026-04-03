@@ -1,14 +1,13 @@
 "use client";
 
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import { useSignUp } from "@/lib/api";
 import { motion } from "framer-motion";
-import { Input } from "@/components/ui/input";
-import { Button } from "@/components/ui/button";
-import Link from "next/link";
 import { Eye, EyeOff, UserPlus } from "lucide-react";
-import { useState, useEffect } from "react";
+import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
-import { Suspense } from "react";
+import { Suspense, useEffect, useState } from "react";
 
 const AUTH_USER_KEY = "archive_user";
 const AUTH_TOKEN_KEY = "archive_token";
@@ -35,7 +34,9 @@ function SignUpForm() {
           localStorage.setItem(AUTH_TOKEN_KEY, res.token);
           if (res.user) localStorage.setItem(AUTH_USER_KEY, JSON.stringify(res.user));
         }
-        router.push("/");
+        const pendingContributor =
+          res.user?.role === "CONTRIBUTOR" && res.user?.status === "PENDING";
+        router.push(pendingContributor ? "/contributor-welcome" : "/");
       }
     },
     onError: () => {},

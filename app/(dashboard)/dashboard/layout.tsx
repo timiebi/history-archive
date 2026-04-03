@@ -1,10 +1,10 @@
 "use client";
 
 import { AUTH_TOKEN_KEY, AUTH_USER_KEY } from "@/lib/constants";
+import { ExternalLink, LayoutDashboard, LogOut, Menu, Settings, User, X } from "lucide-react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
-import { LayoutDashboard, User, Settings, LogOut, Menu, X, ExternalLink } from "lucide-react";
 
 const DASHBOARD_NAV = [
   { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
@@ -39,8 +39,7 @@ export default function DashboardLayout({
     }
   }, [pathname, router]);
 
-  const canAccess =
-    user?.role === "ADMIN" || (user?.role === "CONTRIBUTOR" && user?.status === "APPROVED");
+  const canAccess = user?.role === "ADMIN" || user?.role === "CONTRIBUTOR";
 
   useEffect(() => {
     if (!mounted || !user) return;

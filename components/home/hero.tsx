@@ -105,14 +105,14 @@ export function Hero() {
           </motion.div>
         </motion.div>
 
-        <div className="absolute -right-16 xl:-right-24 top-1/2 -translate-y-1/2 hidden lg:block text-left border-l border-orange-600/70 pl-4 opacity-90 max-w-44">
+        {/* <div className="absolute -right-16 xl:-right-24 top-1/2 -translate-y-1/2 hidden lg:block text-left border-l border-orange-600/70 pl-4 opacity-90 max-w-44">
           <div className="font-mono text-[8px] text-orange-400 space-y-1.5 uppercase tracking-widest">
             <p>Focus: Continent-wide</p>
             <p>Mission: Open access</p>
             <p>Voices: Communities</p>
             <p>Archive: Living</p>
           </div>
-        </div>
+        </div> */}
       </div>
 
       <style jsx>{`

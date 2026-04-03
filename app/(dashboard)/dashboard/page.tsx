@@ -43,18 +43,22 @@ export default function DashboardPage() {
     }
   }, []);
 
-  const canAccess =
-    user?.role === "ADMIN" || (user?.role === "CONTRIBUTOR" && user?.status === "APPROVED");
-  const { data: overview, isPending, isError } = useContributorOverview({
-    enabled: mounted && !!canAccess && !!localStorage.getItem(AUTH_TOKEN_KEY),
-  });
   const isAdmin = user?.role === "ADMIN";
+  const isContributor = user?.role === "CONTRIBUTOR";
+  const isApprovedContributor = isContributor && user?.status === "APPROVED";
+  const canEnter = isAdmin || isContributor;
+  const canLoadOverview =
+    mounted && !!localStorage.getItem(AUTH_TOKEN_KEY) && (isAdmin || isApprovedContributor);
+
+  const { data: overview, isPending: overviewPending, isError: overviewError } = useContributorOverview({
+    enabled: canLoadOverview,
+  });
   const { data: adminStories } = useAdminStories({ page: 1, limit: 8, status: "PENDING" }, { enabled: mounted && isAdmin });
   const { data: adminCultures } = useAdminCultures({ page: 1, limit: 8, status: "PENDING" }, { enabled: mounted && isAdmin });
   const moderateStory = useModerateStory();
   const moderateCulture = useModerateCulture();
 
-  if (!mounted || !user || !canAccess) {
+  if (!mounted || !user || !canEnter) {
     return (
       <main className="min-h-screen bg-[#fafaf9] dark:bg-[#0c0a09] flex items-center justify-center">
         <p className="text-stone-500 font-mono text-sm uppercase tracking-widest">Loading…</p>
@@ -66,6 +70,7 @@ export default function DashboardPage() {
   const myTimelines = overview?.myTimelines ?? [];
   const isApproved =
     user.role === "ADMIN" || (user.role === "CONTRIBUTOR" && user.status === "APPROVED");
+  const showOverviewGrid = canLoadOverview && !overviewPending && !overviewError;
 
   return (
     <main className="min-h-screen bg-[#fafaf9] dark:bg-[#0c0a09] py-8 sm:py-12 md:py-16 px-4 sm:px-6 safe-area-inset">
@@ -83,15 +88,25 @@ export default function DashboardPage() {
             <p className="text-stone-500 mt-2 font-mono text-xs max-w-xl">
               {isApproved
                 ? "Your stories and timelines appear below."
-                : "Your account is pending review."}
+                : "Your account is pending review — explore the archive while you wait; we’ll email you when you can submit."}
             </p>
           </div>
           <div className="flex flex-col sm:flex-row flex-wrap items-stretch sm:items-center gap-3">
-            <Link href="/contribute" className="inline-flex">
-              <Button className="rounded-none font-black uppercase tracking-widest text-[10px] gap-2 h-11 min-h-[44px] w-full sm:w-auto">
-                <Plus size={14} aria-hidden /> Start a new story
+            {isApproved ? (
+              <Link href="/contribute" className="inline-flex">
+                <Button className="rounded-none font-black uppercase tracking-widest text-[10px] gap-2 h-11 min-h-[44px] w-full sm:w-auto">
+                  <Plus size={14} aria-hidden /> Start a new story
+                </Button>
+              </Link>
+            ) : (
+              <Button
+                type="button"
+                disabled
+                className="rounded-none font-black uppercase tracking-widest text-[10px] gap-2 h-11 min-h-[44px] w-full sm:w-auto opacity-60 cursor-not-allowed"
+              >
+                <Plus size={14} aria-hidden /> Submit opens after approval
               </Button>
-            </Link>
+            )}
             <div className="flex flex-wrap items-center gap-x-4 gap-y-2 font-mono text-[10px] uppercase tracking-widest">
               <Link href="/dashboard/settings" className="text-stone-500 hover:text-orange-700 dark:hover:text-orange-400 py-2 min-h-[44px] flex items-center">
                 <Settings size={14} className="mr-2" aria-hidden /> Settings
@@ -103,18 +118,29 @@ export default function DashboardPage() {
           </div>
         </div>
 
-        {isPending && (
+        {canLoadOverview && overviewPending && (
           <p className="font-mono text-[10px] uppercase tracking-widest text-stone-500 py-8">
             Loading your content…
           </p>
         )}
-        {isError && (
+        {canLoadOverview && overviewError && (
           <p className="font-mono text-[10px] uppercase text-red-600 dark:text-red-400 py-4">
             Could not load dashboard. Check your connection and try again.
           </p>
         )}
 
-        {!isPending && !isError && (
+        {!canLoadOverview && isContributor && !isApproved && (
+          <div className="border border-amber-200 dark:border-amber-900/50 bg-amber-50/80 dark:bg-amber-950/30 p-6 mb-10">
+            <p className="font-mono text-[10px] uppercase tracking-widest text-amber-800 dark:text-amber-300 mb-2">
+              Awaiting approval
+            </p>
+            <p className="text-stone-600 dark:text-stone-400 text-sm leading-relaxed">
+              Story and timeline summaries will show here after your contributor account is approved. You can still use Profile and Settings.
+            </p>
+          </div>
+        )}
+
+        {showOverviewGrid && (
           <div className="space-y-10 sm:space-y-14">
             {/* My Stories */}
             <section>
@@ -247,3 +273,4 @@ export default function DashboardPage() {
     </main>
   );
 }
+

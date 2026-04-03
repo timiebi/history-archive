@@ -1,7 +1,7 @@
 "use client";
 
 import { Button } from "@/components/ui/button";
-import { useNotifications } from "@/lib/api";
+import { useMe, useNotifications } from "@/lib/api";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -36,26 +36,81 @@ export function Navbar() {
   const [isScrolled, setIsScrolled] = useState(false);
   const [user, setUser] = useState<{ name?: string; role?: string; status?: string } | null>(null);
   const [mounted, setMounted] = useState(false);
+  const [hasToken, setHasToken] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
   const { data: notifications } = useNotifications(20, {
     enabled: mounted && !!user,
   });
   const unreadCount = notifications?.unreadCount ?? 0;
   const canContribute = mounted && user && (user.role === "ADMIN" || (user.role === "CONTRIBUTOR" && user?.status === "APPROVED"));
+  const showDashboardLink = mounted && user && (user.role === "ADMIN" || user.role === "CONTRIBUTOR");
+
+  const isContributor = user?.role === "CONTRIBUTOR";
+  const { data: me, isSuccess: meOk } = useMe({
+    enabled: mounted && hasToken && !!isContributor,
+  });
 
   useEffect(() => {
-    setMounted(true);
-    if (typeof window !== "undefined") {
-      const u = localStorage.getItem(AUTH_USER_KEY);
-      if (u) {
-        try {
-          setUser(JSON.parse(u));
-        } catch {
-          setUser(null);
-        }
-      } else setUser(null);
-    }
+    let cancelled = false;
+    Promise.resolve().then(() => {
+      if (cancelled) return;
+      setMounted(true);
+      if (typeof window !== "undefined") {
+        setHasToken(!!localStorage.getItem(AUTH_TOKEN_KEY));
+        const u = localStorage.getItem(AUTH_USER_KEY);
+        if (u) {
+          try {
+            setUser(JSON.parse(u));
+          } catch {
+            setUser(null);
+          }
+        } else setUser(null);
+      }
+    });
+    return () => {
+      cancelled = true;
+    };
   }, [pathname]);
+
+  useEffect(() => {
+    if (!meOk || !me || typeof window === "undefined") return;
+    let cancelled = false;
+    Promise.resolve().then(() => {
+      if (cancelled) return;
+      setUser((prev) => {
+        if (!prev || prev.role !== "CONTRIBUTOR") return prev;
+        const next = { ...prev, status: me.status, name: me.name };
+        try {
+          const raw = localStorage.getItem(AUTH_USER_KEY);
+          if (raw) {
+            const p = JSON.parse(raw) as Record<string, unknown>;
+            localStorage.setItem(
+              AUTH_USER_KEY,
+              JSON.stringify({
+                ...p,
+                status: me.status,
+                name: me.name,
+                email: me.email ?? p.email,
+              })
+            );
+          }
+        } catch {
+          // ignore
+        }
+        return next;
+      });
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, [meOk, me]);
+
+  const contributorBadge =
+    user?.role === "CONTRIBUTOR" && (user.status === "PENDING" || user.status === "APPROVED")
+      ? user.status === "APPROVED"
+        ? { className: "bg-emerald-500", label: "Verified contributor" }
+        : { className: "bg-amber-400", label: "Contributor — pending approval" }
+      : null;
 
   const handleScroll = useCallback(() => {
     setIsScrolled(window.scrollY > 50);
@@ -66,7 +121,13 @@ export function Navbar() {
   }, [handleScroll]);
 
   useEffect(() => {
-    setMobileOpen(false);
+    let cancelled = false;
+    Promise.resolve().then(() => {
+      if (!cancelled) setMobileOpen(false);
+    });
+    return () => {
+      cancelled = true;
+    };
   }, [pathname]);
 
   const isHome = pathname === "/";
@@ -126,10 +187,21 @@ export function Navbar() {
                   <Button
                     variant="ghost"
                     size="icon"
-                    className={`hidden sm:flex rounded-none cursor-pointer ${onTransparentOverHero ? "text-stone-300 hover:bg-white/10 hover:text-white" : "text-stone-600 dark:text-stone-400 hover:bg-stone-100 dark:hover:bg-stone-800"}`}
-                    aria-label="Open menu"
+                    className={`hidden sm:flex rounded-none cursor-pointer relative ${onTransparentOverHero ? "text-stone-300 hover:bg-white/10 hover:text-white" : "text-stone-600 dark:text-stone-400 hover:bg-stone-100 dark:hover:bg-stone-800"}`}
+                    aria-label={contributorBadge ? `Open menu (${contributorBadge.label})` : "Open menu"}
                   >
-                    <CircleUser size={22} aria-hidden />
+                    <span className="relative inline-flex">
+                      <CircleUser size={22} aria-hidden />
+                      {contributorBadge && (
+                        <span
+                          className={`absolute -bottom-0.5 -right-0.5 h-2.5 w-2.5 rounded-full ring-2 ${contributorBadge.className} ${
+                            onTransparentOverHero ? "ring-stone-900/80" : "ring-[#fafaf9] dark:ring-[#0c0a09]"
+                          }`}
+                          title={contributorBadge.label}
+                          aria-hidden
+                        />
+                      )}
+                    </span>
                   </Button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end" className="min-w-48 rounded-none border-stone-200 dark:border-stone-800 font-mono text-xs">
@@ -148,7 +220,7 @@ export function Navbar() {
                       <Archive size={16} /> Enter Archive
                     </Link>
                   </DropdownMenuItem>
-                  {canContribute && (
+                  {showDashboardLink && (
                     <>
                       <DropdownMenuSeparator />
                       <DropdownMenuItem asChild>
@@ -156,6 +228,11 @@ export function Navbar() {
                           <LayoutDashboard size={16} /> Dashboard
                         </Link>
                       </DropdownMenuItem>
+                    </>
+                  )}
+                  {canContribute && (
+                    <>
+                      <DropdownMenuSeparator />
                       <DropdownMenuItem asChild>
                         <Link href="/contribute" className="flex items-center gap-2 cursor-pointer">
                           <PenLine size={16} /> Submit story
@@ -247,15 +324,15 @@ export function Navbar() {
               Notifications{unreadCount > 0 ? ` (${unreadCount})` : ""}
             </Link>
           )}
+          {mounted && (user?.role === "ADMIN" || user?.role === "CONTRIBUTOR") && (
+            <Link href="/dashboard" className="py-3 px-4 text-sm font-black uppercase tracking-widest text-stone-700 dark:text-stone-300 hover:bg-stone-100 dark:hover:bg-stone-800 rounded-md">
+              Dashboard
+            </Link>
+          )}
           {mounted && (user?.role === "ADMIN" || (user?.role === "CONTRIBUTOR" && user?.status === "APPROVED")) && (
-            <>
-              <Link href="/dashboard" className="py-3 px-4 text-sm font-black uppercase tracking-widest text-stone-700 dark:text-stone-300 hover:bg-stone-100 dark:hover:bg-stone-800 rounded-md">
-                Dashboard
-              </Link>
-              <Link href="/contribute" className="py-3 px-4 text-sm font-black uppercase tracking-widest text-orange-700 dark:text-orange-500 hover:bg-orange-50 dark:hover:bg-orange-950/30 rounded-md">
-                Submit story
-              </Link>
-            </>
+            <Link href="/contribute" className="py-3 px-4 text-sm font-black uppercase tracking-widest text-orange-700 dark:text-orange-500 hover:bg-orange-50 dark:hover:bg-orange-950/30 rounded-md">
+              Submit story
+            </Link>
           )}
           <Link href="/artifacts" className="py-3 px-4 text-sm font-black uppercase tracking-widest text-stone-900 dark:text-white bg-stone-900 dark:bg-stone-100 rounded-md hover:bg-orange-800 dark:hover:bg-orange-600 transition-colors duration-200">
             Enter Archive
