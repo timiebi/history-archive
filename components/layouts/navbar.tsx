@@ -190,12 +190,12 @@ export function Navbar() {
                     className={`hidden sm:flex rounded-none cursor-pointer relative ${onTransparentOverHero ? "text-stone-300 hover:bg-white/10 hover:text-white" : "text-stone-600 dark:text-stone-400 hover:bg-stone-100 dark:hover:bg-stone-800"}`}
                     aria-label={contributorBadge ? `Open menu (${contributorBadge.label})` : "Open menu"}
                   >
-                    <span className="relative inline-flex">
+                    <span className="relative inline-flex items-center justify-center">
                       <CircleUser size={22} aria-hidden />
                       {contributorBadge && (
                         <span
-                          className={`absolute -bottom-0.5 -right-0.5 h-2.5 w-2.5 rounded-full ring-2 ${contributorBadge.className} ${
-                            onTransparentOverHero ? "ring-stone-900/80" : "ring-[#fafaf9] dark:ring-[#0c0a09]"
+                          className={`absolute bottom-0 right-0 h-1.5 w-1.5 rounded-full ring-1 ${contributorBadge.className} ${
+                            onTransparentOverHero ? "ring-stone-900/90" : "ring-[#fafaf9] dark:ring-[#0c0a09]"
                           }`}
                           title={contributorBadge.label}
                           aria-hidden
