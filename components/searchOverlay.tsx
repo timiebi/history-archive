@@ -3,15 +3,22 @@
 import { AnimatePresence, motion } from "framer-motion";
 import { ArrowRight, Book, Clock, Diamond, Search, Sparkles } from "lucide-react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useMemo, useState } from "react";
 import { useStories, useCountries } from "@/lib/api";
 
 type SearchRecord = { id: string; title: string; type: string; category: string; href: string };
 
 export function SearchOverlay() {
+  const pathname = usePathname();
   const [isOpen, setIsOpen] = useState(false);
   const [query, setQuery] = useState("");
+
+  const hideOnContributorWelcome = pathname === "/contributor-welcome";
+
+  useEffect(() => {
+    if (hideOnContributorWelcome) setIsOpen(false);
+  }, [hideOnContributorWelcome]);
 
   const { data: storiesData, isSuccess: storiesOk } = useStories(undefined, { enabled: isOpen });
   const { data: countriesData, isSuccess: countriesOk } = useCountries({ enabled: isOpen });
@@ -32,6 +39,7 @@ export function SearchOverlay() {
   }, [storiesOk, storiesData?.items, countriesOk, countriesData?.items]);
 
   useEffect(() => {
+    if (hideOnContributorWelcome) return;
     const handleKeyDown = (e: KeyboardEvent) => {
       if ((e.metaKey || e.ctrlKey) && e.key === "k") {
         e.preventDefault();
@@ -41,7 +49,7 @@ export function SearchOverlay() {
     };
     window.addEventListener("keydown", handleKeyDown);
     return () => window.removeEventListener("keydown", handleKeyDown);
-  }, []);
+  }, [hideOnContributorWelcome]);
 
   const filteredResults = useMemo(() => {
     if (!query) return allRecords.slice(0, 6);
@@ -50,6 +58,8 @@ export function SearchOverlay() {
       item.category.toLowerCase().includes(query.toLowerCase())
     );
   }, [query, allRecords]);
+
+  if (hideOnContributorWelcome) return null;
 
   return (
     <>
