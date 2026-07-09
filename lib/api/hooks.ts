@@ -34,6 +34,7 @@ import {
     getStoryById,
     getTimelineById,
     getTimelines,
+    getTourismPartners,
     markAllNotificationsRead,
     markNotificationRead,
     toggleStoryReaction,
@@ -50,7 +51,7 @@ import {
     type ReactionType,
     type UserNotification,
 } from "./client";
-import type { Category, Country, Culture, Manuscript, Story, Timeline, TimelineDetail } from "./types";
+import type { Category, Country, Culture, Manuscript, Story, Timeline, TimelineDetail, TourismPartner } from "./types";
 
 const keys = {
   categories: ["api", "categories"] as const,
@@ -72,6 +73,8 @@ const keys = {
   adminCultures: (params?: Record<string, unknown>) => ["api", "admin", "cultures", params ?? {}] as const,
   library: ["api", "library"] as const,
   manuscript: (id: string) => ["api", "library", id] as const,
+  tourismPartners: (p: { storyId: string; cultureId: string }) =>
+    ["api", "tourism", "partners", p.storyId, p.cultureId] as const,
 };
 
 export function useCategories(
@@ -274,6 +277,34 @@ export function useStoryByExternalId(
       getStoryByExternalId(source!, externalId!) as Promise<Story>,
     enabled: !!(source && externalId),
     ...options,
+  });
+}
+
+export function useTourismPartners(
+  params: { storyId?: string | null; cultureId?: string | null },
+  options?: Omit<UseQueryOptions<TourismPartner[], Error>, "queryKey" | "queryFn">
+) {
+  const storyId = params.storyId?.trim() || undefined;
+  const cultureId = params.cultureId?.trim() || undefined;
+  const apiParams = storyId ? { storyId } : cultureId ? { cultureId } : null;
+
+  return useQuery({
+    queryKey: keys.tourismPartners({
+      storyId: storyId ?? "",
+      cultureId: cultureId ?? "",
+    }),
+    queryFn: async () => {
+      try {
+        return await getTourismPartners(apiParams!);
+      } catch {
+        return [];
+      }
+    },
+    retry: false,
+    staleTime: 60_000,
+    ...options,
+    /** Require a param; callers may pass `enabled: false` (e.g. defer until in view). */
+    enabled: !!apiParams && options?.enabled !== false,
   });
 }
 

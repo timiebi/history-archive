@@ -35,7 +35,7 @@ export default function ManifestoPage() {
           {
             title: "Access",
             icon: Zap,
-            desc: "Students, teachers, researchers, and communities should be able to use this archive freely and clearly.",
+            desc: "Students, teachers, researchers, and communities should be able to use this records library freely and clearly.",
           },
           {
             title: "Sovereignty",
@@ -93,7 +93,7 @@ export default function ManifestoPage() {
 
       <section className="min-h-screen flex flex-col items-center justify-center border-t border-stone-200 dark:border-stone-900 px-6 py-24">
         <h2 className="text-5xl md:text-7xl font-black uppercase italic tracking-tighter text-center mb-12">
-          Help grow <br /> <span className="text-stone-300 dark:text-stone-700">the archive.</span>
+          Help grow <br /> <span className="text-stone-300 dark:text-stone-700">Gesi.</span>
         </h2>
         <div className="flex flex-col sm:flex-row gap-6">
           <Link

@@ -1,11 +1,11 @@
 "use client";
 
+import { useCountries, useStories } from "@/lib/api";
 import { AnimatePresence, motion } from "framer-motion";
-import { ArrowRight, Book, Clock, Diamond, Search, Sparkles } from "lucide-react";
+import { ArrowRight, Book, Clock, Diamond, Search } from "lucide-react";
 import Link from "next/link";
-import { usePathname, useRouter } from "next/navigation";
+import { usePathname } from "next/navigation";
 import { useEffect, useMemo, useState } from "react";
-import { useStories, useCountries } from "@/lib/api";
 
 type SearchRecord = { id: string; title: string; type: string; category: string; href: string };
 
@@ -52,11 +52,15 @@ export function SearchOverlay() {
   }, [hideOnContributorWelcome]);
 
   const filteredResults = useMemo(() => {
+    const cap = 40;
     if (!query) return allRecords.slice(0, 6);
-    return allRecords.filter(item => 
-      item.title.toLowerCase().includes(query.toLowerCase()) || 
-      item.category.toLowerCase().includes(query.toLowerCase())
-    );
+    return allRecords
+      .filter(
+        (item) =>
+          item.title.toLowerCase().includes(query.toLowerCase()) ||
+          item.category.toLowerCase().includes(query.toLowerCase())
+      )
+      .slice(0, cap);
   }, [query, allRecords]);
 
   if (hideOnContributorWelcome) return null;
@@ -147,43 +151,6 @@ export function SearchOverlay() {
           </div>
         )}
       </AnimatePresence>
-      {/* <DiscoveryButton/> */}
     </>
-  );
-}
-
-
-
-
-
-export function DiscoveryButton() {
-  const router = useRouter();
-  const { data: storiesData, isSuccess: storiesOk } = useStories();
-  const { data: countriesData, isSuccess: countriesOk } = useCountries();
-
-  const discoveryPaths = useMemo(() => {
-    const paths: string[] = [];
-    if (storiesOk && storiesData?.items?.length) {
-      (storiesData.items as { id: string }[]).forEach((s) => paths.push(`/stories/${s.id}`));
-    }
-    if (countriesOk && countriesData?.items?.length) paths.push("/cultures", "/map");
-    return paths;
-  }, [storiesOk, storiesData?.items, countriesOk, countriesData?.items]);
-
-  const handleDiscovery = () => {
-    if (discoveryPaths.length === 0) return;
-    const randomIndex = Math.floor(Math.random() * discoveryPaths.length);
-    router.push(discoveryPaths[randomIndex]!);
-  };
-
-  return (
-    <button 
-      onClick={handleDiscovery}
-      disabled={discoveryPaths.length === 0}
-      className="fixed bottom-8 left-8 z-40 bg-white dark:bg-stone-900 text-stone-900 dark:text-white p-4 border border-stone-200 dark:border-stone-800 shadow-xl hover:text-orange-700 transition-all flex items-center gap-3 group disabled:opacity-50 disabled:pointer-events-none"
-    >
-      <Sparkles size={18} className="group-hover:rotate-12 transition-transform text-orange-700" />
-      <span className="text-[10px] font-black uppercase tracking-widest hidden md:inline">Random Discovery</span>
-    </button>
   );
 }

@@ -121,7 +121,7 @@ export default function TimelinePage() {
             </h1>
             <p className="text-stone-500 dark:text-stone-400 font-serif italic max-w-xl text-sm sm:text-base leading-relaxed">
               Traverse dynasties, empires, and eras. Each timeline stitches together stories, manuscripts, and
-              artifacts from the Sovereign Archive.
+              artifacts from Sovereign Records.
             </p>
           </div>
           {kingdoms.length > 0 && (

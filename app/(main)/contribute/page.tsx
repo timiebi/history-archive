@@ -206,7 +206,7 @@ export default function ContributePage() {
               Thank you — your story is in
             </h1>
             <p className="text-stone-500 font-serif text-lg">
-              It will be reviewed and can appear in the archive once approved. You can check its status from your dashboard.
+              It will be reviewed and can appear in Gesi once approved. You can check its status from your dashboard.
             </p>
           </div>
           <div className="flex flex-col sm:flex-row gap-3 justify-center">
@@ -240,7 +240,7 @@ export default function ContributePage() {
           <h1 className="text-5xl font-black uppercase italic tracking-tighter text-stone-900 dark:text-white leading-tight">
             Submit a <span className="text-orange-800">Story</span>
           </h1>
-          <p className="text-stone-500 mt-4 font-serif italic">Add a verified record to the archive. A cover image is required; you can add optional sections (text + image per section) so your story displays like featured articles—text then image in flow.</p>
+          <p className="text-stone-500 mt-4 font-serif italic">Add a verified record to Gesi. A cover image is required; you can add optional sections (text + image per section) so your story displays like featured articles—text then image in flow.</p>
         </motion.div>
 
         <motion.form initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.2 }} className="space-y-6" method="post" onSubmit={(e) => { e.preventDefault(); void onSubmit(e); }} noValidate>
@@ -489,7 +489,7 @@ export default function ContributePage() {
             }
             className="w-full h-14 cursor-pointer rounded-none font-black uppercase tracking-[0.2em] text-[10px] hover:bg-orange-800 dark:hover:bg-orange-600 disabled:cursor-not-allowed"
           >
-            {uploadingImages ? "Uploading images…" : createStory.isPending ? "Submitting…" : "Submit to archive"}
+            {uploadingImages ? "Uploading images…" : createStory.isPending ? "Submitting…" : "Submit to Gesi"}
           </Button>
         </motion.form>
         <p className="mt-8 text-center">

@@ -1,6 +1,11 @@
 "use client";
 
+// import { PlanYourVisit } from "@/components/PlanYourVisit";
+import { StoryHeroImage } from "@/components/stories/StoryHeroImage";
 import { useStoryByExternalId } from "@/lib/api";
+import { scrollToPlanYourVisitSection } from "@/lib/scroll-to-plan-visit";
+import { useShowPlanVisitCta } from "@/lib/use-show-plan-visit-cta";
+import { MapPin } from "lucide-react";
 import Link from "next/link";
 
 const PLACEHOLDER_COVER = "https://images.unsplash.com/photo-1503177119275-0aa32b3a9368?q=80&w=1200";
@@ -47,11 +52,12 @@ export function ExternalStoryDetailClient({ source, externalId }: { source: stri
   const sourceLabel = (story.externalSource as string) ?? source;
   const sections = normalizeSections(story.sections);
   const hasSections = sections.length > 0;
+  const showVisitCta = useShowPlanVisitCta(story.id);
 
   return (
     <article className="bg-[#fcfaf7] dark:bg-stone-950 min-h-screen pb-20">
       <header className="relative h-[50vh] md:h-[70vh] w-full">
-        <img src={cover} alt={title} className="object-cover h-full w-full" />
+        <StoryHeroImage src={cover} alt={title} />
         <div className="absolute inset-0 bg-linear-to-t from-[#fcfaf7] dark:from-stone-950 via-stone-950/20 to-transparent" />
         <div className="absolute bottom-0 left-0 w-full p-6 md:p-20">
           <div className="max-w-4xl mx-auto">
@@ -65,14 +71,26 @@ export function ExternalStoryDetailClient({ source, externalId }: { source: stri
         </div>
       </header>
 
-      <div className="max-w-4xl mx-auto px-6 py-8 border-b border-stone-200 dark:border-stone-800 flex flex-wrap gap-8 items-center text-xs font-bold uppercase tracking-widest text-stone-500">
-        {author && (
-          <>
-            <div>Author: <span className="text-stone-900 dark:text-stone-100">{author}</span></div>
-            <div className="h-1 w-1 rounded-full bg-orange-600" />
-          </>
-        )}
-        <div>Source: <span className="text-stone-900 dark:text-stone-100">{sourceLabel}</span></div>
+      <div className="max-w-4xl mx-auto px-6 py-8 border-b border-stone-200 dark:border-stone-800 flex flex-wrap items-center justify-between gap-x-8 gap-y-4 text-xs font-bold uppercase tracking-widest text-stone-500">
+        <div className="flex flex-wrap items-center gap-x-8 gap-y-2">
+          {author && (
+            <>
+              <div>Author: <span className="text-stone-900 dark:text-stone-100">{author}</span></div>
+              <div className="h-1 w-1 rounded-full bg-orange-600" />
+            </>
+          )}
+          <div>Source: <span className="text-stone-900 dark:text-stone-100">{sourceLabel}</span></div>
+        </div>
+        {showVisitCta ? (
+          <button
+            type="button"
+            onClick={scrollToPlanYourVisitSection}
+            className="flex items-center gap-1.5 text-stone-400 hover:text-orange-700 dark:hover:text-orange-500 transition-colors cursor-pointer"
+          >
+            <MapPin size={16} aria-hidden />
+            <span>Visit</span>
+          </button>
+        ) : null}
       </div>
 
       <div className="max-w-4xl mx-auto px-6 py-16 md:py-24">
@@ -106,6 +124,8 @@ export function ExternalStoryDetailClient({ source, externalId }: { source: stri
             </div>
           </div>
         )}
+
+        {/* <PlanYourVisit storyId={story.id} className="mt-16 md:mt-20" /> */}
 
         <div className="mt-16 pt-12 border-t border-stone-200 dark:border-stone-800">
           <p className="text-stone-400 font-mono text-[10px] uppercase tracking-widest">Content from {sourceLabel} · Read in full above</p>

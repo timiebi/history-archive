@@ -1,6 +1,8 @@
 "use client";
 
 import { useTimeline } from "@/lib/api";
+import { shouldUseNextImageOptimizer } from "@/lib/image-optimizer";
+import Image from "next/image";
 import type {
   TimelineDetail,
   TimelineDetailStory,
@@ -154,8 +156,15 @@ export default function TimelineDetailPage() {
                     className="block border border-stone-200 dark:border-stone-800 rounded-none overflow-hidden hover:border-orange-400 dark:hover:border-orange-600 transition-colors"
                   >
                     {a.image ? (
-                      <div className="aspect-4/3 bg-stone-200 dark:bg-stone-800">
-                        <img src={a.image} alt="" className="w-full h-full object-cover" />
+                      <div className="aspect-4/3 bg-stone-200 dark:bg-stone-800 relative">
+                        <Image
+                          src={a.image}
+                          alt=""
+                          fill
+                          sizes="(max-width: 640px) 100vw, 250px"
+                          className="object-cover"
+                          unoptimized={!shouldUseNextImageOptimizer(a.image)}
+                        />
                       </div>
                     ) : null}
                     <div className="p-4">

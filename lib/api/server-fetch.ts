@@ -3,6 +3,8 @@
  * Uses NEXT_PUBLIC_API_URL so first load has data without waiting for client.
  */
 
+import { HOME_STORIES_PAGE_SIZE } from "@/lib/home-stories";
+
 const getBase = () => (process.env.NEXT_PUBLIC_API_URL ?? "").replace(/\/$/, "");
 
 export async function fetchStoriesForHome(): Promise<{
@@ -13,7 +15,7 @@ export async function fetchStoriesForHome(): Promise<{
   const base = getBase();
   if (!base) return { items: [] };
   try {
-    const res = await fetch(`${base}/stories?limit=4&page=1`, {
+    const res = await fetch(`${base}/stories?limit=${HOME_STORIES_PAGE_SIZE}&page=1`, {
       next: { revalidate: 60 },
       headers: { Accept: "application/json" },
     });

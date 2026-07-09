@@ -62,7 +62,7 @@ function extractReadTarget(message: string) {
   return cleaned || null;
 }
 
-export default function AskArchivePage() {
+export default function AskGesiPage() {
   const browserLanguage = useMemo(() => {
     if (typeof window === "undefined") return "en-US";
     return navigator.language || "en-US";
@@ -73,7 +73,7 @@ export default function AskArchivePage() {
       id: crypto.randomUUID(),
       role: "assistant",
       content:
-        "Ask me about stories in the Afri Archive. You can also say: read “Story title”.",
+        "Ask me about stories in Gesi. You can also say: read “Story title”.",
     },
   ]);
   const [input, setInput] = useState("");
@@ -183,7 +183,7 @@ export default function AskArchivePage() {
           id: crypto.randomUUID(),
           role: "assistant",
           content:
-            err instanceof Error ? err.message : "Something went wrong while talking to the archive.",
+            err instanceof Error ? err.message : "Something went wrong while talking to Gesi.",
         },
       ]);
     } finally {
@@ -196,7 +196,7 @@ export default function AskArchivePage() {
       <div className="max-w-3xl mx-auto space-y-6">
         <div className="space-y-2">
           <h1 className="text-4xl font-black uppercase italic tracking-tighter text-stone-900 dark:text-white">
-            Ask the Archive
+            Ask Gesi
           </h1>
           <p className="text-stone-500 font-serif italic">
             Ask questions, or say: <span className="font-mono">read “Story title”</span> to hear it aloud.

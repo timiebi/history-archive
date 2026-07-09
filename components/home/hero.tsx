@@ -1,128 +1,235 @@
 "use client";
 
-import { motion } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
 import Image from "next/image";
 import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
+import { Sparkles, MapPin, Calendar, Compass, ArrowRight, Play } from "lucide-react";
 
 const HERO_IMG = "/hero-home.png";
+const EMPIRES = ["Kingdom of Mali", "Aksumite Empire", "Kingdom of Kush", "Songhai Empire", "Great Zimbabwe"];
+
+const containerVariants = {
+  hidden: { opacity: 0 },
+  visible: {
+    opacity: 1,
+    transition: {
+      staggerChildren: 0.12,
+      delayChildren: 0.1,
+    },
+  },
+} as const;
+
+const itemVariants = {
+  hidden: { opacity: 0, y: 20 },
+  visible: {
+    opacity: 1,
+    y: 0,
+    transition: {
+      type: "spring",
+      stiffness: 90,
+      damping: 18,
+    },
+  },
+} as const;
 
 export function Hero() {
-  const [mousePos, setMousePos] = useState({ x: 0, y: 0 });
-  const rafRef = useRef<number>(0);
+  const [empireIndex, setEmpireIndex] = useState(0);
+  const cardRef = useRef<HTMLDivElement>(null);
 
+  // Rotate empire names
   useEffect(() => {
-    let ticking = false;
-    const handleMove = (e: MouseEvent) => {
-      if (!ticking) {
-        rafRef.current = requestAnimationFrame(() => {
-          setMousePos({
-            x: (e.clientX / window.innerWidth - 0.5) * 12,
-            y: (e.clientY / window.innerHeight - 0.5) * 12,
-          });
-          ticking = false;
-        });
-        ticking = true;
-      }
+    const timer = setInterval(() => {
+      setEmpireIndex((prev) => (prev + 1) % EMPIRES.length);
+    }, 3200);
+    return () => clearInterval(timer);
+  }, []);
+
+  // Soft mouse-tracking parallax on the featured tour card
+  useEffect(() => {
+    const card = cardRef.current;
+    if (!card || typeof window === "undefined") return;
+
+    const handleMouseMove = (e: MouseEvent) => {
+      const rect = card.getBoundingClientRect();
+      const x = e.clientX - rect.left - rect.width / 2;
+      const y = e.clientY - rect.top - rect.height / 2;
+      
+      const rotX = -(y / (rect.height / 2)) * 12;
+      const rotY = (x / (rect.width / 2)) * 12;
+      
+      card.style.transform = `perspective(1000px) rotateX(${rotX}deg) rotateY(${rotY}deg) scale3d(1.02, 1.02, 1.02)`;
     };
-    window.addEventListener("mousemove", handleMove, { passive: true });
+
+    const handleMouseLeave = () => {
+      card.style.transform = "perspective(1000px) rotateX(0deg) rotateY(0deg) scale3d(1, 1, 1)";
+    };
+
+    card.addEventListener("mousemove", handleMouseMove);
+    card.addEventListener("mouseleave", handleMouseLeave);
+    
     return () => {
-      window.removeEventListener("mousemove", handleMove);
-      if (rafRef.current) cancelAnimationFrame(rafRef.current);
+      card.removeEventListener("mousemove", handleMouseMove);
+      card.removeEventListener("mouseleave", handleMouseLeave);
     };
   }, []);
 
   return (
-    <section className="relative h-[85vh] sm:h-[95vh] w-full flex items-center justify-center overflow-hidden bg-stone-900">
-      <div className="absolute inset-0 z-0">
-        <div
-          className="absolute inset-0 w-full h-full scale-110"
-          style={{
-            transform: `translate(${mousePos.x}px, ${mousePos.y}px)`,
-          }}
-        >
-          <Image
-            src={HERO_IMG}
-            alt="Dryland rural landscape with footpath, trees, and open sky — Afri Archive"
-            fill
-            sizes="100vw"
-            className="object-cover object-center opacity-[0.72] grayscale-[0.2]"
-            priority
-          />
+    <section className="relative min-h-[90vh] lg:min-h-screen w-full flex items-center justify-center overflow-hidden bg-stone-950 pt-24 lg:pt-0">
+      {/* Background Media */}
+      <div className="absolute inset-0 z-0 select-none pointer-events-none">
+        <Image
+          src={HERO_IMG}
+          alt="Ancient African landscape background"
+          fill
+          sizes="100vw"
+          className="object-cover object-center opacity-40 grayscale-[0.1]"
+          priority
+        />
+        <div className="absolute inset-0 bg-linear-to-b from-stone-950/70 via-stone-900/10 to-[#fafaf9] dark:to-[#0c0a09] z-10" />
+        <div className="absolute inset-0 bg-radial-gradient from-transparent via-stone-950/20 to-stone-950/80 z-10" />
+      </div>
+
+      <div className="relative z-20 max-w-7xl mx-auto px-6 w-full grid grid-cols-1 lg:grid-cols-12 gap-12 lg:gap-8 items-center">
+        {/* Left Editorial Header */}
+        <div className="lg:col-span-7 space-y-6 text-left">
+          <motion.div
+            variants={containerVariants}
+            initial="hidden"
+            animate="visible"
+            className="space-y-6"
+          >
+            <motion.div variants={itemVariants} className="inline-flex items-center gap-2 bg-orange-700/10 dark:bg-orange-500/5 border border-orange-500/20 px-3.5 py-1.5 rounded-full backdrop-blur-md">
+              <Sparkles size={11} className="text-orange-500 animate-pulse" />
+              <span className="text-orange-500 font-mono text-[9px] font-black uppercase tracking-[0.25em]">
+                Gesi. · Truth in Heritage
+              </span>
+            </motion.div>
+
+            <motion.h1 
+              variants={itemVariants} 
+              className="text-[11vw] sm:text-[9vw] lg:text-[5.5vw] font-black uppercase italic tracking-tighter leading-[0.85] text-white drop-shadow-sm"
+            >
+              Explore the <br />
+              <span className="relative inline-block h-[1.1em] overflow-hidden text-transparent bg-clip-text bg-linear-to-r from-amber-500 to-orange-500 font-extrabold pr-2">
+                <AnimatePresence mode="wait">
+                  <motion.span
+                    key={empireIndex}
+                    initial={{ y: "100%" }}
+                    animate={{ y: 0 }}
+                    exit={{ y: "-100%" }}
+                    transition={{ type: "spring", stiffness: 120, damping: 18 }}
+                    className="absolute left-0 inline-block whitespace-nowrap"
+                  >
+                    {EMPIRES[empireIndex]}
+                  </motion.span>
+                </AnimatePresence>
+              </span>
+            </motion.h1>
+
+            <motion.p 
+              variants={itemVariants}
+              className="text-stone-300 dark:text-stone-400 font-serif text-base sm:text-lg lg:text-xl max-w-xl leading-relaxed"
+            >
+              The digital gateway to Africa's sovereign records and heritage sites. Journey through verified histories, interactive timelines, and bookable guided excursions led by local custodians.
+            </motion.p>
+
+            <motion.div
+              variants={itemVariants}
+              className="pt-4 flex flex-col sm:flex-row items-center gap-4 w-full sm:w-auto"
+            >
+              <Link
+                href="/stories"
+                className="w-full sm:w-auto inline-flex items-center justify-center min-h-[50px] px-8 bg-primary hover:bg-orange-800 text-white font-mono text-[10px] font-black uppercase tracking-[0.25em] transition-all duration-300 rounded-lg shadow-lg shadow-orange-700/10 active:scale-98 cursor-pointer relative group overflow-hidden"
+              >
+                <span className="relative z-10">Explore Records</span>
+                <span className="absolute inset-0 bg-white/10 translate-y-full group-hover:translate-y-0 transition-transform duration-300 pointer-events-none" />
+              </Link>
+              
+              <Link
+                href="/visit"
+                className="w-full sm:w-auto inline-flex items-center justify-center min-h-[50px] px-8 bg-white/5 border border-white/15 hover:border-white/35 hover:bg-white/10 backdrop-blur-md text-white font-mono text-[10px] font-black uppercase tracking-[0.25em] transition-all duration-300 rounded-lg active:scale-98 cursor-pointer relative group overflow-hidden"
+              >
+                <span className="relative z-10 flex items-center gap-2">
+                  <Compass size={12} className="animate-spin-slow" />
+                  <span>Book Heritage Tours</span>
+                </span>
+                <span className="absolute inset-0 bg-white/5 translate-x-full group-hover:translate-x-0 transition-transform duration-300 pointer-events-none" />
+              </Link>
+            </motion.div>
+          </motion.div>
         </div>
 
-        <div
-          className="absolute top-0 left-0 w-full h-0.5 bg-orange-700/50 z-10 shadow-[0_0_15px_rgba(194,65,12,0.8)] animate-scan-line"
-          aria-hidden
-        />
-
-        <div className="absolute inset-0 bg-linear-to-b from-stone-950/50 via-stone-900/20 to-[#fafaf9] dark:to-[#0c0a09] z-10" />
-        <div className="absolute inset-0 bg-[url('https://grainy-gradients.vercel.app/noise.svg')] opacity-20 pointer-events-none z-10" />
-      </div>
-
-      <div className="relative z-20 text-center px-4 sm:px-6 max-w-5xl mx-auto">
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.4 }}
-        >
-          <span className="text-orange-400 sm:text-orange-500 font-black tracking-[0.35em] sm:tracking-[0.5em] uppercase text-[9px] sm:text-[10px] mb-4 sm:mb-5 block">
-            Afri Archive · African history
-          </span>
-          <p className="text-stone-200/95 font-mono text-[10px] sm:text-[11px] uppercase tracking-[0.22em] mb-6 sm:mb-8 max-w-2xl mx-auto leading-relaxed">
-            The living archive — digital repatriation, open access, and stories from kingdoms, villages, and
-            descendant communities across the continent.
-          </p>
-          <h1 className="text-[11vw] sm:text-[10vw] md:text-[8vw] font-black uppercase italic tracking-tighter leading-[0.75] text-white drop-shadow-[0_2px_28px_rgba(0,0,0,0.55)]">
-            Heritage <br />
-            <span className="text-transparent stroke-text">Unveiled.</span>
-          </h1>
-
+        {/* Right Heritage Destination Card Showcase */}
+        <div className="lg:col-span-5 flex justify-center">
           <motion.div
-            initial={{ opacity: 0, y: 12 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.35, delay: 0.15 }}
-            className="mt-10 sm:mt-12 flex flex-col sm:flex-row items-stretch sm:items-center justify-center gap-3 sm:gap-4"
+            initial={{ opacity: 0, scale: 0.95 }}
+            animate={{ opacity: 1, scale: 1 }}
+            transition={{ delay: 0.4, type: "spring" }}
+            className="w-full max-w-sm"
           >
-            <Link
-              href="/stories"
-              className="inline-flex items-center justify-center min-h-[48px] px-8 bg-orange-700 text-white font-mono text-[10px] font-black uppercase tracking-[0.2em] hover:bg-orange-800 transition-colors border border-orange-600/80"
+            <div
+              ref={cardRef}
+              className="relative w-full aspect-[4/5] bg-stone-900/60 backdrop-blur-lg border border-white/10 p-5 rounded-2xl shadow-2xl transition-all duration-200 ease-out flex flex-col justify-between overflow-hidden group/card cursor-pointer"
             >
-              Explore stories
-            </Link>
-            <Link
-              href="/ask"
-              className="inline-flex items-center justify-center min-h-[48px] px-8 bg-white/10 text-white font-mono text-[10px] font-black uppercase tracking-[0.2em] border border-white/30 hover:bg-white/15 backdrop-blur-sm transition-colors"
-            >
-              Ask the archive
-            </Link>
-            <Link
-              href="/contribute"
-              className="inline-flex items-center justify-center min-h-[48px] px-6 text-stone-200 font-mono text-[10px] font-black uppercase tracking-[0.2em] underline-offset-4 hover:text-white hover:underline"
-            >
-              Contribute
-            </Link>
+              {/* Card Image Cover background */}
+              <div className="absolute inset-0 z-0">
+                <Image
+                  src="https://images.unsplash.com/photo-1547471080-7cc2caa01a7e?q=80&w=800"
+                  alt="Lalibela Rock Churches"
+                  fill
+                  className="object-cover opacity-35 group-hover/card:scale-105 transition-transform duration-700 ease-out"
+                />
+                <div className="absolute inset-0 bg-linear-to-t from-stone-950 via-stone-950/40 to-transparent" />
+              </div>
+
+              {/* Card Top Ribbon */}
+              <div className="relative z-10 flex items-center justify-between">
+                <span className="bg-orange-850 text-white text-[8px] font-mono font-black tracking-widest uppercase px-2.5 py-1 rounded-sm">
+                  Recommended Tour
+                </span>
+                <div className="flex items-center gap-1 text-amber-400 font-mono text-[9px] font-black">
+                  <span>★</span> <span>4.9</span>
+                </div>
+              </div>
+
+              {/* Card Bottom Meta */}
+              <div className="relative z-10 space-y-4 pt-16">
+                <div className="space-y-1.5">
+                  <div className="flex items-center gap-1 text-stone-300 text-[9px] font-mono uppercase tracking-wider">
+                    <MapPin size={10} className="text-orange-500" />
+                    <span>Lalibela, Ethiopia</span>
+                  </div>
+                  <h3 className="text-xl md:text-2xl font-black uppercase text-white leading-tight">
+                    Stone Churches <br />
+                    of Lalibela
+                  </h3>
+                  <p className="text-[11px] text-stone-400 font-serif italic line-clamp-2 leading-relaxed">
+                    Explore the 11 medieval rock-hewn monolithic churches carved directly from volcanic stone.
+                  </p>
+                </div>
+
+                <div className="border-t border-white/10 pt-3 flex items-center justify-between">
+                  <div className="text-[9px] font-mono uppercase tracking-widest text-stone-400">
+                    Duration: <span className="text-white">6 Days</span>
+                  </div>
+                  <div className="text-xs font-mono font-black text-white">
+                    $1,250 <span className="text-[9px] font-normal text-stone-400">/ person</span>
+                  </div>
+                </div>
+
+                <Link
+                  href="/visit?tour=lalibela"
+                  className="w-full py-3 bg-linear-to-r from-amber-700 to-orange-800 text-white font-mono text-[9px] font-black uppercase tracking-widest rounded-lg flex items-center justify-center gap-2 hover:shadow-[0_0_15px_rgba(249,115,22,0.25)] transition-all cursor-pointer"
+                >
+                  <span>Book Experience</span>
+                  <ArrowRight size={10} />
+                </Link>
+              </div>
+            </div>
           </motion.div>
-        </motion.div>
-
-        {/* <div className="absolute -right-16 xl:-right-24 top-1/2 -translate-y-1/2 hidden lg:block text-left border-l border-orange-600/70 pl-4 opacity-90 max-w-44">
-          <div className="font-mono text-[8px] text-orange-400 space-y-1.5 uppercase tracking-widest">
-            <p>Focus: Continent-wide</p>
-            <p>Mission: Open access</p>
-            <p>Voices: Communities</p>
-            <p>Archive: Living</p>
-          </div>
-        </div> */}
+        </div>
       </div>
-
-      <style jsx>{`
-        .stroke-text {
-          -webkit-text-stroke: 1px rgba(255, 255, 255, 0.35);
-        }
-        :global(.dark) .stroke-text {
-          -webkit-text-stroke: 1px rgba(255, 255, 255, 0.2);
-        }
-      `}</style>
     </section>
   );
 }

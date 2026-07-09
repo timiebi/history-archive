@@ -2,7 +2,9 @@
 
 import { useCategories, useStories } from "@/lib/api";
 import { storyToStoryDisplay, type StoryDisplay } from "@/lib/api/mappers";
+import { shouldUseNextImageOptimizer } from "@/lib/image-optimizer";
 import { AnimatePresence, motion, useScroll, useSpring, useTransform } from "framer-motion";
+import Image from "next/image";
 import { useSearchParams } from "next/navigation";
 import { Suspense, useEffect, useMemo, useState } from "react";
 
@@ -144,10 +146,13 @@ function StoriesPageContent() {
               >
                 {/* IMAGE WITH "SCANNING" EFFECT */}
                 <div className={`relative h-96 md:h-162.5 overflow-hidden ${index % 2 !== 0 ? 'md:order-last' : ''}`}>
-                  <img 
+                  <Image 
                     src={story.image || "https://images.unsplash.com/photo-1503177119275-0aa32b3a9368?q=80&w=800"} 
                     alt={story.title} 
+                    fill
+                    sizes="(max-width: 768px) 100vw, 50vw"
                     className="w-full h-full object-cover transition-transform duration-1000 scale-110 group-hover:scale-100 grayscale-[0.6] group-hover:grayscale-0" 
+                    unoptimized={!shouldUseNextImageOptimizer(story.image || "")}
                   />
                   
                   {/* The Scanning Overlay */}
@@ -190,7 +195,7 @@ function StoriesPageContent() {
 
                   <div className="mt-auto pt-10 border-t border-stone-100 dark:border-stone-900 flex items-center justify-between">
                     <div className="flex items-center gap-4 font-black text-[10px] uppercase tracking-[0.4em]">
-                      Explore Archive <span className="group-hover:translate-x-4 transition-transform duration-500 text-orange-800">→</span>
+                      Explore Record <span className="group-hover:translate-x-4 transition-transform duration-500 text-orange-800">→</span>
                     </div>
                     <div className="h-2 w-2 rounded-full bg-stone-300 dark:bg-stone-800 group-hover:bg-orange-800 transition-colors duration-500" />
                   </div>

@@ -65,7 +65,7 @@ export default function MapPage() {
               />
               <input
                 type="text"
-                placeholder="Search Archive..."
+                placeholder="Search Gesi Records..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 className="w-full bg-stone-50 dark:bg-stone-950 border border-stone-200 dark:border-stone-800 py-3 pl-10 pr-4 text-[10px] font-mono text-stone-900 dark:text-white placeholder:text-stone-400 dark:placeholder:text-stone-700 focus:outline-none focus:border-orange-800 transition-all uppercase tracking-widest"

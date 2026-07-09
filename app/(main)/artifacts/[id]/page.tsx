@@ -2,6 +2,8 @@
 
 import { motion } from "framer-motion";
 import { ArrowLeft, Layers, ZoomIn, ZoomOut } from "lucide-react";
+import { shouldUseNextImageOptimizer } from "@/lib/image-optimizer";
+import Image from "next/image";
 import Link from "next/link";
 import { use, useRef, useState } from "react";
 import { useArtifacts } from "@/lib/api";
@@ -155,7 +157,14 @@ export default function ArtifactDetailPage({ params }: { params: Promise<{ id: s
             {artifacts.filter((a) => a.id !== artifact.id).map((related) => (
               <Link key={related.id} href={`/artifacts/${related.id}`} className="min-w-100 group">
                 <div className="aspect-4/5 bg-stone-200 dark:bg-stone-950 overflow-hidden mb-6 relative">
-                  <img src={related.image ?? ""} alt="" className="w-full h-full object-cover grayscale group-hover:grayscale-0 transition-all duration-700" />
+                  <Image
+                    src={related.image ?? ""}
+                    alt=""
+                    fill
+                    sizes="(max-width: 1024px) 100vw, 400px"
+                    className="w-full h-full object-cover grayscale group-hover:grayscale-0 transition-all duration-700"
+                    unoptimized={!shouldUseNextImageOptimizer(related.image ?? "")}
+                  />
                 </div>
                 <h3 className="text-lg font-semibold tracking-tight">{related.name}</h3>
                 <p className="text-xs text-stone-500">{related.origin ?? ""}</p>

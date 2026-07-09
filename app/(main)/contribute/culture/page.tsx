@@ -129,7 +129,7 @@ export default function ContributeCulturePage() {
           </div>
           <div className="space-y-3">
             <h1 className="text-3xl font-black uppercase italic tracking-tighter text-stone-900 dark:text-white">Culture added</h1>
-            <p className="text-stone-500 font-serif text-lg">It will appear on the Cultures page. You can add another or go back to the archive.</p>
+            <p className="text-stone-500 font-serif text-lg">It will appear on the Cultures page. You can add another or go back to Gesi.</p>
           </div>
           <div className="flex flex-col sm:flex-row gap-3 justify-center">
             <Link href="/cultures">
