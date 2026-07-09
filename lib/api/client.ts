@@ -6,7 +6,7 @@
 
 import { AUTH_TOKEN_KEY, AUTH_USER_KEY } from "@/lib/constants";
 import axios, { type AxiosError } from "axios";
-import type { ApiError, Culture, Manuscript, Timeline, TimelineDetail } from "./types";
+import type { ApiError, Culture, Manuscript, Timeline, TimelineDetail, TourismPartner } from "./types";
 
 function getBaseUrl(): string {
   const url = process.env.NEXT_PUBLIC_API_URL ?? "";
@@ -401,6 +401,57 @@ export async function getCultures(params?: { region?: string; year?: number; sea
     return { items };
   } catch (e: unknown) {
     if (isApiClientError(e) && e.status === 404) return { items: [] };
+    throw e;
+  }
+}
+
+function normalizeTourismPartnersResponse(data: unknown): TourismPartner[] {
+  const list: unknown[] = Array.isArray(data)
+    ? data
+    : data && typeof data === "object" && Array.isArray((data as { items?: unknown }).items)
+      ? ((data as { items: unknown[] }).items ?? [])
+      : [];
+  const out: TourismPartner[] = [];
+  for (const row of list) {
+    if (!row || typeof row !== "object") continue;
+    const r = row as Record<string, unknown>;
+    const id = typeof r.id === "string" ? r.id : "";
+    const name = typeof r.name === "string" ? r.name : "";
+    const websiteUrl =
+      typeof r.websiteUrl === "string"
+        ? r.websiteUrl
+        : typeof r.website_url === "string"
+          ? r.website_url
+          : "";
+    if (!id || !name || !websiteUrl) continue;
+    out.push({
+      id,
+      name,
+      description: typeof r.description === "string" ? r.description : undefined,
+      websiteUrl,
+      bookingUrl:
+        typeof r.bookingUrl === "string"
+          ? r.bookingUrl
+          : typeof r.booking_url === "string"
+            ? r.booking_url
+            : undefined,
+      logoUrl:
+        typeof r.logoUrl === "string" ? r.logoUrl : typeof r.logo_url === "string" ? r.logo_url : undefined,
+    });
+  }
+  return out;
+}
+
+/** GET /tourism/partners — query with either storyId or cultureId (not both). */
+export async function getTourismPartners(params: {
+  storyId?: string;
+  cultureId?: string;
+}): Promise<TourismPartner[]> {
+  try {
+    const { data } = await api.get<unknown>("/tourism/partners", { params });
+    return normalizeTourismPartnersResponse(data);
+  } catch (e: unknown) {
+    if (isApiClientError(e) && e.status === 404) return [];
     throw e;
   }
 }

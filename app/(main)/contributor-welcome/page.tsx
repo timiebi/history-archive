@@ -71,7 +71,7 @@ function ContributorWelcomeInner() {
           </h1>
           <p className="text-stone-500 font-serif text-lg leading-relaxed">
             Contributor access requires approval. Your account is in the review queue; we&apos;ll email you when you&apos;re verified (typically
-            within a few business days). Until then, browse the archive and complete your profile from the dashboard.
+            within a few business days). Until then, browse Gesi and complete your profile from the dashboard.
           </p>
         </div>
         <div className="flex flex-col sm:flex-row gap-3 justify-center">

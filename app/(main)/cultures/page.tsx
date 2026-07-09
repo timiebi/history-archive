@@ -3,7 +3,9 @@
 import { CultureOverlay } from "../map/culltureOverlay";
 import { useCultures } from "@/lib/api";
 import { cultureToCultureDisplay, type CultureDisplay } from "@/lib/api/mappers";
+import { shouldUseNextImageOptimizer } from "@/lib/image-optimizer";
 import { AnimatePresence, motion } from "framer-motion";
+import Image from "next/image";
 import { History } from "lucide-react";
 import { useMemo, useState } from "react";
 
@@ -55,7 +57,7 @@ export default function CulturePage() {
           Peoples <span className="text-stone-400 dark:text-stone-600">& Polities</span>
         </h1>
         <p className="text-stone-500 dark:text-stone-400 font-serif italic max-w-2xl text-sm md:text-base leading-relaxed mb-8">
-          Browse cultures in the archive. Use the year slider at the bottom to highlight entries that begin on
+          Browse cultures in Gesi. Use the year slider at the bottom to highlight entries that begin on
           or before the selected year; search and region narrow the list.
         </p>
         <div className="flex flex-col sm:flex-row gap-4 sm:items-center max-w-2xl">
@@ -132,7 +134,7 @@ export default function CulturePage() {
       ) : filteredCultures.length === 0 ? (
         <p className="max-w-7xl mx-auto py-20 text-center text-stone-500 text-sm">
           {culturesList.length === 0
-            ? "No cultures in the archive yet."
+            ? "No cultures in Gesi yet."
             : "No cultures match your filters. Try another year, region, or search."}
         </p>
       ) : (
@@ -148,7 +150,14 @@ export default function CulturePage() {
               onClick={() => setSelectedCulture(culture)}
               className="group relative h-100 bg-stone-900 overflow-hidden border border-stone-800"
             >
-              <img src={culture.image ?? ""} className="absolute inset-0 w-full h-full object-cover opacity-50 group-hover:opacity-100 group-hover:scale-110 transition-all duration-700" alt="" />
+              <Image
+                src={culture.image ?? ""}
+                alt=""
+                fill
+                sizes="(max-width: 640px) 100vw, 25vw"
+                className="absolute inset-0 w-full h-full object-cover opacity-50 group-hover:opacity-100 group-hover:scale-110 transition-all duration-700"
+                unoptimized={!shouldUseNextImageOptimizer(culture.image ?? "")}
+              />
               <div className="absolute inset-0 bg-linear-to-t from-black to-transparent" />
               <div className="absolute inset-0 p-6 flex flex-col justify-end">
                 <h3 className="text-xl font-bold tracking-tight text-white">{culture.name}</h3>

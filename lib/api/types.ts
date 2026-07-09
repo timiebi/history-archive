@@ -142,6 +142,16 @@ export interface Culture {
   [key: string]: unknown;
 }
 
+/** Backend: GET /tourism/partners?storyId=… | ?cultureId=… (approved partners only) */
+export interface TourismPartner {
+  id: string;
+  name: string;
+  description?: string;
+  websiteUrl: string;
+  bookingUrl?: string;
+  logoUrl?: string;
+}
+
 /** Backend: GET /library – manuscript (digital folio) */
 export interface Manuscript {
   id: string;

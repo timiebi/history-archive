@@ -123,7 +123,7 @@ export default function LibraryPage() {
       {/* Footer Meta */}
       <footer className="p-12 text-center border-t border-stone-300">
         <p className="text-stone-500 text-xs">
-          Descriptions and scans are added as the archive grows. Always cite the original holding institution
+          Descriptions and scans are added as Gesi Library grows. Always cite the original holding institution
           when you use this material elsewhere.
         </p>
       </footer>

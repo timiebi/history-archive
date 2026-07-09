@@ -1,6 +1,6 @@
+import { RootChrome } from "@/components/layouts/RootChrome";
 import { QueryProvider } from "@/components/providers/QueryProvider";
 import { ThemeProvider } from "@/components/providers/themeProviders";
-import { SearchOverlay } from "@/components/searchOverlay";
 import type { Metadata, Viewport } from "next";
 import { GeistMono } from "geist/font/mono";
 import { GeistSans } from "geist/font/sans";
@@ -19,14 +19,14 @@ const sourceSerif = Source_Serif_4({
 const siteUrl =
   process.env.NEXT_PUBLIC_SITE_URL?.replace(/\/$/, "") ?? "http://localhost:3000";
 
-const siteName = "Afri Archive";
+const siteName = "Gesi";
 const description =
-  "Open access archive of African history, culture, and stories — digital repatriation, community narratives, artifacts, timelines, and library materials across the continent.";
+  "Gesi — Truth in heritage. An open access, community-verified living record of African history, digital repatriation, community narratives, manuscripts, and timelines.";
 
 export const metadata: Metadata = {
   metadataBase: new URL(siteUrl),
   title: {
-    default: `${siteName} — African history & stories`,
+    default: `${siteName} — Truth in African Heritage`,
     template: `%s | ${siteName}`,
   },
   description,
@@ -35,8 +35,9 @@ export const metadata: Metadata = {
   creator: siteName,
   publisher: siteName,
   keywords: [
+    "Gesi",
     "African history",
-    "Afri Archive",
+    "truth in heritage",
     "Africa",
     "oral history",
     "digital archive",
@@ -104,7 +105,7 @@ export default function RootLayout({
         <ThemeProvider>
           <QueryProvider>
             {/* <Navbar /> */}
-            <SearchOverlay/>
+            <RootChrome />
             <main>{children}</main>
             {/* <Footer/> */}
           </QueryProvider>
