@@ -4,7 +4,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import Image from "next/image";
 import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
-import { Sparkles, MapPin, Calendar, Compass, ArrowRight, Play } from "lucide-react";
+import { Sparkles, MapPin, Compass, ArrowRight } from "lucide-react";
 
 const HERO_IMG = "/hero-home.png";
 const EMPIRES = ["Kingdom of Mali", "Aksumite Empire", "Kingdom of Kush", "Songhai Empire", "Great Zimbabwe"];
