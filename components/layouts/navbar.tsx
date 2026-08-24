@@ -9,7 +9,7 @@ import {
     DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { useMe, useNotifications } from "@/lib/api";
-import { Archive, Bell, CircleUser, LayoutDashboard, LogIn, LogOut, Menu, Moon, PenLine, Sun, X, BookOpen, Bot, Compass, Globe } from "lucide-react";
+import { Archive, Bell, Building2, CircleUser, LayoutDashboard, LogIn, LogOut, Menu, Moon, PenLine, Sun, X, BookOpen, Bot, Compass, Globe } from "lucide-react";
 import { useTheme } from "next-themes";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
@@ -221,6 +221,16 @@ export function Navbar() {
                       <Archive size={16} /> Enter Archive
                     </Link>
                   </DropdownMenuItem>
+                  {mounted && user && (
+                    <>
+                      <DropdownMenuSeparator />
+                      <DropdownMenuItem asChild>
+                        <Link href="/partner" className="flex items-center gap-2 cursor-pointer">
+                          <Building2 size={16} /> Tourism partner
+                        </Link>
+                      </DropdownMenuItem>
+                    </>
+                  )}
                   {showDashboardLink && (
                     <>
                       <DropdownMenuSeparator />
@@ -385,6 +395,16 @@ export function Navbar() {
               </Link>
             )}
             
+            {mounted && user && (
+              <Link
+                href="/partner"
+                onClick={() => setMobileOpen(false)}
+                className="py-3 px-4 text-xs font-mono font-black uppercase tracking-widest text-stone-700 dark:text-stone-300 hover:bg-stone-100/50 dark:hover:bg-stone-900/50 rounded-lg"
+              >
+                Tourism partner
+              </Link>
+            )}
+
             {showDashboardLink && (
               <Link
                 href="/dashboard"

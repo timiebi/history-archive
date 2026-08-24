@@ -2,7 +2,6 @@
 
 import { useTourismPartners } from "@/lib/api";
 import type { TourismPartner } from "@/lib/api/types";
-import { getTourismDemoPartners, shouldBypassTourismApi } from "@/lib/tourism-ui-demo";
 import { useEffect, useId, useRef, useState } from "react";
 
 function isSafeHttpUrl(url: string): boolean {
@@ -198,8 +197,8 @@ export type PlanYourVisitProps = {
 };
 
 /**
- * Tourism partners for a story or culture.
- * In **development** (or when `NEXT_PUBLIC_TOURISM_UI_DEMO=true`), shows demo listings without calling the API so you can review UI first.
+ * Tourism partners for a story or culture — loaded from GET /tourism/partners only.
+ * Returns null when the API has no approved partners (no demo fallback).
  */
 export function PlanYourVisit({
   storyId,
@@ -208,13 +207,12 @@ export function PlanYourVisit({
   surface = "article",
 }: PlanYourVisitProps) {
   const enabled = Boolean(storyId?.trim() || cultureId?.trim());
-  const bypassApi = shouldBypassTourismApi();
   const sentinelRef = useRef<HTMLDivElement>(null);
-  /** Slide-over is small: fetch immediately. Dev/demo skips scroll defer. */
-  const [nearViewport, setNearViewport] = useState(() => surface === "panel" || bypassApi);
+  /** Slide-over is small: fetch immediately. */
+  const [nearViewport, setNearViewport] = useState(() => surface === "panel");
 
   useEffect(() => {
-    if (bypassApi || surface === "panel" || !enabled) return;
+    if (surface === "panel" || !enabled) return;
     const el = sentinelRef.current;
     if (!el) return;
     const io = new IntersectionObserver(
@@ -225,18 +223,16 @@ export function PlanYourVisit({
     );
     io.observe(el);
     return () => io.disconnect();
-  }, [enabled, surface, bypassApi]);
+  }, [enabled, surface]);
 
   const { data: apiPartners = [], isPending } = useTourismPartners(
     { storyId, cultureId },
-    { enabled: enabled && nearViewport && !bypassApi }
+    { enabled: enabled && nearViewport }
   );
   const [infoOpen, setInfoOpen] = useState(false);
 
   const partners: TourismPartner[] = (() => {
-    if (!enabled) return [];
-    if (bypassApi) return getTourismDemoPartners();
-    if (isPending) return [];
+    if (!enabled || isPending) return [];
     return apiPartners.length ? apiPartners : [];
   })();
 
@@ -244,7 +240,7 @@ export function PlanYourVisit({
     return <div ref={sentinelRef} className={`h-px w-full ${className}`} aria-hidden />;
   }
 
-  if (enabled && !bypassApi && isPending) {
+  if (enabled && isPending) {
     return (
       <section
         className={`mt-16 md:mt-20 border border-stone-200 dark:border-stone-800 bg-stone-50/80 dark:bg-stone-900/30 px-5 py-6 sm:px-8 sm:py-8 ${className}`}

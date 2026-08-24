@@ -34,7 +34,27 @@ import {
     getStoryById,
     getTimelineById,
     getTimelines,
+    getTourByIdOrSlug,
+    getTours,
     getTourismPartners,
+    getMyPartnerOrganizations,
+    createPartnerOrganization,
+    updatePartnerOrganization,
+    getPartnerMembers,
+    addPartnerMember,
+    removePartnerMember,
+    getPartnerTours,
+    getPartnerTour,
+    createPartnerTour,
+    updatePartnerTour,
+    submitPartnerTour,
+    withdrawPartnerTour,
+    getClaimEligibility,
+    getPartnerClaims,
+    getPartnerClaim,
+    createTourListingClaim,
+    resubmitTourListingClaim,
+    withdrawTourListingClaim,
     markAllNotificationsRead,
     markNotificationRead,
     toggleStoryReaction,
@@ -52,6 +72,8 @@ import {
     type UserNotification,
 } from "./client";
 import type { Category, Country, Culture, Manuscript, Story, Timeline, TimelineDetail, TourismPartner } from "./types";
+import { mapApiTourToTour } from "@/lib/tourism/map-api-tour";
+import type { Tour } from "@/lib/tourism/types";
 
 const keys = {
   categories: ["api", "categories"] as const,
@@ -75,6 +97,18 @@ const keys = {
   manuscript: (id: string) => ["api", "library", id] as const,
   tourismPartners: (p: { storyId: string; cultureId: string }) =>
     ["api", "tourism", "partners", p.storyId, p.cultureId] as const,
+  tours: (params?: Record<string, unknown>) => ["api", "tourism", "tours", params ?? {}] as const,
+  tour: (idOrSlug: string) => ["api", "tourism", "tours", idOrSlug] as const,
+  myPartnerOrgs: ["api", "partner", "organizations", "me"] as const,
+  partnerMembers: (orgId: string) => ["api", "partner", "organizations", orgId, "members"] as const,
+  partnerTours: (params?: Record<string, unknown>) =>
+    ["api", "partner", "tours", params ?? {}] as const,
+  partnerTour: (id: string) => ["api", "partner", "tours", id] as const,
+  claimEligibility: (tourIdOrSlug: string) =>
+    ["api", "partner", "claims", "eligibility", tourIdOrSlug] as const,
+  partnerClaims: (params?: Record<string, unknown>) =>
+    ["api", "partner", "claims", params ?? {}] as const,
+  partnerClaim: (id: string) => ["api", "partner", "claims", id] as const,
 };
 
 export function useCategories(
@@ -308,7 +342,39 @@ export function useTourismPartners(
   });
 }
 
+export function useTours(
+  params?: { region?: string; search?: string; page?: number; limit?: number },
+  options?: Omit<UseQueryOptions<Tour[], Error>, "queryKey" | "queryFn">
+) {
+  return useQuery({
+    queryKey: keys.tours(params),
+    queryFn: async () => {
+      const res = await getTours(params);
+      return (res.items ?? []).map(mapApiTourToTour);
+    },
+    retry: false,
+    ...options,
+  });
+}
+
+export function useTour(
+  idOrSlug: string,
+  options?: Omit<UseQueryOptions<Tour | null, Error>, "queryKey" | "queryFn">
+) {
+  return useQuery({
+    queryKey: keys.tour(idOrSlug),
+    queryFn: async () => {
+      const apiTour = await getTourByIdOrSlug(idOrSlug);
+      return apiTour ? mapApiTourToTour(apiTour) : null;
+    },
+    enabled: Boolean(idOrSlug),
+    retry: false,
+    ...options,
+  });
+}
+
 export { keys as apiQueryKeys };
+
 export function useApiQueryClient() {
   return useQueryClient();
 }
@@ -556,6 +622,308 @@ export function useResetPassword(
 ) {
   return useMutation({
     mutationFn: ({ token, newPassword }) => authResetPassword(token, newPassword),
+    ...options,
+  });
+}
+
+// ——— Partner organizations (Phase 4A) ———
+export function useMyPartnerOrganizations(
+  options?: Omit<
+    UseQueryOptions<
+      { items: { membershipRole: string; organization: import("./client").PartnerOrganization }[] },
+      Error
+    >,
+    "queryKey" | "queryFn"
+  > & { enabled?: boolean }
+) {
+  return useQuery({
+    queryKey: keys.myPartnerOrgs,
+    queryFn: getMyPartnerOrganizations,
+    ...options,
+  });
+}
+
+export function useCreatePartnerOrganization(
+  options?: UseMutationOptions<
+    import("./client").PartnerOrganization,
+    Error,
+    import("./client").CreatePartnerOrganizationBody
+  >
+) {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: createPartnerOrganization,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: keys.myPartnerOrgs });
+    },
+    ...options,
+  });
+}
+
+export function useUpdatePartnerOrganization(
+  options?: UseMutationOptions<
+    import("./client").PartnerOrganization,
+    Error,
+    { orgId: string; body: import("./client").UpdatePartnerOrganizationBody }
+  >
+) {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({ orgId, body }) => updatePartnerOrganization(orgId, body),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: keys.myPartnerOrgs });
+    },
+    ...options,
+  });
+}
+
+export function usePartnerMembers(
+  orgId: string | null,
+  options?: Omit<
+    UseQueryOptions<{ items: import("./client").PartnerMembership[]; total: number }, Error>,
+    "queryKey" | "queryFn"
+  > & { enabled?: boolean }
+) {
+  return useQuery({
+    queryKey: keys.partnerMembers(orgId ?? ""),
+    queryFn: () => getPartnerMembers(orgId!),
+    enabled: !!orgId && (options?.enabled ?? true),
+    ...options,
+  });
+}
+
+export function useAddPartnerMember(
+  options?: UseMutationOptions<
+    import("./client").PartnerMembership,
+    Error,
+    { orgId: string; email: string }
+  >
+) {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({ orgId, email }) =>
+      addPartnerMember(orgId, { email, role: "MANAGER" }),
+    onSuccess: (_data, vars) => {
+      queryClient.invalidateQueries({ queryKey: keys.partnerMembers(vars.orgId) });
+      queryClient.invalidateQueries({ queryKey: keys.myPartnerOrgs });
+    },
+    ...options,
+  });
+}
+
+export function useRemovePartnerMember(
+  options?: UseMutationOptions<
+    { message: string },
+    Error,
+    { orgId: string; membershipId: string }
+  >
+) {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({ orgId, membershipId }) => removePartnerMember(orgId, membershipId),
+    onSuccess: (_data, vars) => {
+      queryClient.invalidateQueries({ queryKey: keys.partnerMembers(vars.orgId) });
+      queryClient.invalidateQueries({ queryKey: keys.myPartnerOrgs });
+    },
+    ...options,
+  });
+}
+
+export function usePartnerTours(
+  params?: {
+    status?: import("./client").PartnerTourStatus;
+    moderationStatus?: import("./client").PartnerTourModerationStatus;
+    page?: number;
+    limit?: number;
+  },
+  options?: Omit<
+    UseQueryOptions<{ items: import("./client").PartnerTour[]; total: number }, Error>,
+    "queryKey" | "queryFn"
+  > & { enabled?: boolean }
+) {
+  return useQuery({
+    queryKey: keys.partnerTours(params),
+    queryFn: () => getPartnerTours(params),
+    ...options,
+  });
+}
+
+export function usePartnerTour(
+  id: string | null,
+  options?: Omit<
+    UseQueryOptions<import("./client").PartnerTour, Error>,
+    "queryKey" | "queryFn"
+  > & { enabled?: boolean }
+) {
+  return useQuery({
+    queryKey: keys.partnerTour(id ?? ""),
+    queryFn: () => getPartnerTour(id!),
+    enabled: !!id && (options?.enabled ?? true),
+    ...options,
+  });
+}
+
+export function useCreatePartnerTour(
+  options?: UseMutationOptions<
+    import("./client").PartnerTour,
+    Error,
+    import("./client").PartnerTourBody
+  >
+) {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: createPartnerTour,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["api", "partner", "tours"] });
+    },
+    ...options,
+  });
+}
+
+export function useUpdatePartnerTour(
+  options?: UseMutationOptions<
+    import("./client").PartnerTour,
+    Error,
+    { id: string; body: Partial<import("./client").PartnerTourBody> }
+  >
+) {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({ id, body }) => updatePartnerTour(id, body),
+    onSuccess: (data) => {
+      queryClient.invalidateQueries({ queryKey: ["api", "partner", "tours"] });
+      queryClient.invalidateQueries({ queryKey: keys.partnerTour(data.id) });
+    },
+    ...options,
+  });
+}
+
+export function useSubmitPartnerTour(
+  options?: UseMutationOptions<import("./client").PartnerTour, Error, string>
+) {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (id: string) => submitPartnerTour(id),
+    onSuccess: (data) => {
+      queryClient.invalidateQueries({ queryKey: ["api", "partner", "tours"] });
+      queryClient.invalidateQueries({ queryKey: keys.partnerTour(data.id) });
+    },
+    ...options,
+  });
+}
+
+export function useWithdrawPartnerTour(
+  options?: UseMutationOptions<import("./client").PartnerTour, Error, string>
+) {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (id: string) => withdrawPartnerTour(id),
+    onSuccess: (data) => {
+      queryClient.invalidateQueries({ queryKey: ["api", "partner", "tours"] });
+      queryClient.invalidateQueries({ queryKey: keys.partnerTour(data.id) });
+    },
+    ...options,
+  });
+}
+
+export function useClaimEligibility(
+  tourIdOrSlug: string | null,
+  options?: Omit<
+    UseQueryOptions<import("./client").ClaimEligibility, Error>,
+    "queryKey" | "queryFn"
+  > & { enabled?: boolean }
+) {
+  return useQuery({
+    queryKey: keys.claimEligibility(tourIdOrSlug ?? ""),
+    queryFn: () => getClaimEligibility(tourIdOrSlug!),
+    enabled: !!tourIdOrSlug && (options?.enabled ?? true),
+    ...options,
+  });
+}
+
+export function usePartnerClaims(
+  params?: {
+    status?: import("./client").ClaimStatus;
+    page?: number;
+    limit?: number;
+  },
+  options?: Omit<
+    UseQueryOptions<{ items: import("./client").TourListingClaim[]; total: number }, Error>,
+    "queryKey" | "queryFn"
+  > & { enabled?: boolean }
+) {
+  return useQuery({
+    queryKey: keys.partnerClaims(params),
+    queryFn: () => getPartnerClaims(params),
+    ...options,
+  });
+}
+
+export function usePartnerClaim(
+  id: string | null,
+  options?: Omit<
+    UseQueryOptions<import("./client").TourListingClaim, Error>,
+    "queryKey" | "queryFn"
+  > & { enabled?: boolean }
+) {
+  return useQuery({
+    queryKey: keys.partnerClaim(id ?? ""),
+    queryFn: () => getPartnerClaim(id!),
+    enabled: !!id && (options?.enabled ?? true),
+    ...options,
+  });
+}
+
+export function useCreateTourListingClaim(
+  options?: UseMutationOptions<
+    import("./client").TourListingClaim,
+    Error,
+    {
+      tourIdOrSlug: string;
+      organizationId?: string;
+      evidenceNotes: string;
+      evidenceUrls?: string[];
+    }
+  >
+) {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: createTourListingClaim,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["api", "partner", "claims"] });
+    },
+    ...options,
+  });
+}
+
+export function useResubmitTourListingClaim(
+  options?: UseMutationOptions<
+    import("./client").TourListingClaim,
+    Error,
+    { id: string; evidenceNotes: string; evidenceUrls?: string[] }
+  >
+) {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({ id, ...body }) => resubmitTourListingClaim(id, body),
+    onSuccess: (data) => {
+      queryClient.invalidateQueries({ queryKey: ["api", "partner", "claims"] });
+      queryClient.invalidateQueries({ queryKey: keys.partnerClaim(data.id) });
+    },
+    ...options,
+  });
+}
+
+export function useWithdrawTourListingClaim(
+  options?: UseMutationOptions<import("./client").TourListingClaim, Error, string>
+) {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (id: string) => withdrawTourListingClaim(id),
+    onSuccess: (data) => {
+      queryClient.invalidateQueries({ queryKey: ["api", "partner", "claims"] });
+      queryClient.invalidateQueries({ queryKey: keys.partnerClaim(data.id) });
+    },
     ...options,
   });
 }

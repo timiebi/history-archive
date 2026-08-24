@@ -24,7 +24,7 @@ const MODULES = [
   },
   {
     name: "Tours & Trips",
-    desc: "Book guided heritage expeditions and safaris.",
+    desc: "Request guided heritage expeditions and safaris.",
     icon: Compass,
     href: "/visit",
   },
