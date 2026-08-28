@@ -5,27 +5,24 @@ import { useMarkNotificationRead, useStory, useToggleStoryReaction } from "@/lib
 import { shouldUseNextImageOptimizer } from "@/lib/image-optimizer";
 import { scrollToPlanYourVisitSection } from "@/lib/scroll-to-plan-visit";
 import { useShowPlanVisitCta } from "@/lib/use-show-plan-visit-cta";
-import { 
-  Heart, 
-  MapPin, 
-  ThumbsUp, 
-  Volume2, 
-  Bot, 
-  Play, 
-  Pause, 
-  Square, 
-  ChevronUp, 
-  Sliders, 
-  Type, 
-  VolumeX,
-  Sparkles,
-  Compass,
-  ArrowRight
+import {
+    ArrowRight,
+    Bot,
+    ChevronUp,
+    Compass,
+    Heart,
+    MapPin,
+    Pause,
+    Play,
+    Sparkles,
+    Square,
+    ThumbsUp,
+    Volume2
 } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
-import { useEffect, useRef, useState, useMemo } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 
 function normalizeSections(input: unknown): Array<{ text: string; image?: string }> {
   if (!Array.isArray(input)) return [];
@@ -442,10 +439,10 @@ export function StoryDetailClient({ id }: { id: string }) {
                 <div className="flex items-center gap-2">
                   <Compass className="text-primary animate-spin-slow" size={20} />
                   <span className="text-[10px] font-mono font-black uppercase tracking-widest text-primary">
-                    Gesi Tourism Integration
+                    Gesi Tourism
                   </span>
                 </div>
-                <span className="text-[9px] font-mono uppercase text-stone-500">In Partnership with Booking.com</span>
+                <span className="text-[9px] font-mono uppercase text-stone-500">Trip requests only</span>
               </div>
               <div className="grid grid-cols-1 md:grid-cols-3 gap-6 items-center">
                 <div className="md:col-span-2 space-y-2">
@@ -453,7 +450,7 @@ export function StoryDetailClient({ id }: { id: string }) {
                     Ready to explore {s.category} first-hand?
                   </h3>
                   <p className="text-xs text-stone-600 dark:text-stone-400 font-serif italic leading-relaxed">
-                    Book guided heritage itineraries, local accommodation, and expert historical guides. Save 10% on preservation-certified packages.
+                    Request a Gesi heritage expedition. No payment is taken online — we coordinate after your enquiry.
                   </p>
                 </div>
                 <div className="md:col-span-1">
@@ -461,7 +458,7 @@ export function StoryDetailClient({ id }: { id: string }) {
                     href={`/visit?destination=${encodeURIComponent(s.category)}`}
                     className="w-full py-4 px-6 bg-primary hover:bg-orange-850 text-white font-mono text-[10px] font-black uppercase tracking-widest rounded-lg flex items-center justify-center gap-2 shadow-md transition cursor-pointer"
                   >
-                    <span>Book Expedition</span>
+                    <span>Explore expeditions</span>
                     <ArrowRight size={12} />
                   </Link>
                 </div>

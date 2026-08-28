@@ -456,6 +456,51 @@ export async function getTourismPartners(params: {
   }
 }
 
+export type TourismToursListResponse = {
+  items: import("@/lib/tourism/map-api-tour").ApiTour[];
+  total: number;
+  page: number;
+  limit: number;
+};
+
+/** GET /tourism/tours — published Gesi-curated tours */
+export async function getTours(params?: {
+  region?: string;
+  search?: string;
+  page?: number;
+  limit?: number;
+}): Promise<TourismToursListResponse> {
+  try {
+    const { data } = await api.get<TourismToursListResponse>("/tourism/tours", { params });
+    return {
+      items: Array.isArray(data?.items) ? data.items : [],
+      total: data?.total ?? 0,
+      page: data?.page ?? 1,
+      limit: data?.limit ?? 20,
+    };
+  } catch (e: unknown) {
+    if (isApiClientError(e) && e.status === 404) {
+      return { items: [], total: 0, page: 1, limit: 20 };
+    }
+    throw e;
+  }
+}
+
+/** GET /tourism/tours/:idOrSlug */
+export async function getTourByIdOrSlug(
+  idOrSlug: string
+): Promise<import("@/lib/tourism/map-api-tour").ApiTour | null> {
+  try {
+    const { data } = await api.get<import("@/lib/tourism/map-api-tour").ApiTour>(
+      `/tourism/tours/${encodeURIComponent(idOrSlug)}`
+    );
+    return data ?? null;
+  } catch (e: unknown) {
+    if (isApiClientError(e) && e.status === 404) return null;
+    throw e;
+  }
+}
+
 export interface CreateCultureInput {
   name: string;
   region: string;
@@ -631,4 +676,402 @@ export async function getManuscriptById(id: string): Promise<Manuscript | null> 
 
 export function isApiClientError(e: unknown): e is ApiClientError {
   return e instanceof ApiClientError;
+}
+
+// ——— Partner organizations (Phase 4A) ———
+
+export type PartnerOrgStatus =
+  | "DRAFT_APPLICATION"
+  | "PENDING_REVIEW"
+  | "NEEDS_INFO"
+  | "VERIFIED"
+  | "REJECTED"
+  | "SUSPENDED";
+
+export interface PartnerOrganization {
+  id: string;
+  name: string;
+  legalName?: string | null;
+  slug: string;
+  country: string;
+  websiteUrl?: string | null;
+  contactEmail: string;
+  contactPhone?: string | null;
+  description?: string | null;
+  logoUrl?: string | null;
+  address?: string | null;
+  socialLinks?: string[];
+  status: PartnerOrgStatus;
+  verificationNotes?: string | null;
+  reviewedAt?: string | null;
+  businessRegistrationId?: string | null;
+  supportingDocUrls?: string[];
+  attestationAcceptedAt?: string | null;
+  createdAt: string;
+  updatedAt: string;
+  owner?: { id: string; name: string; email: string } | null;
+  memberships?: PartnerMembership[];
+}
+
+export type PartnerMemberRole = "OWNER" | "MANAGER";
+
+export interface PartnerMembership {
+  id: string;
+  role: PartnerMemberRole | string;
+  createdAt: string;
+  user: { id: string; name: string; email: string };
+}
+
+
+export type CreatePartnerOrganizationBody = {
+  name: string;
+  legalName: string;
+  country: string;
+  contactEmail: string;
+  contactPhone: string;
+  websiteUrl?: string;
+  businessRegistrationId?: string;
+  description: string;
+  logoUrl?: string;
+  address?: string;
+  socialLinks?: string[];
+  supportingDocUrls?: string[];
+  authorizedToRepresent: boolean;
+};
+
+export type UpdatePartnerOrganizationBody = Partial<
+  Omit<CreatePartnerOrganizationBody, "authorizedToRepresent">
+> & {
+  resubmitForReview?: boolean;
+};
+
+/** GET /partner/organizations/me */
+export async function getMyPartnerOrganizations(): Promise<{
+  items: { membershipRole: string; organization: PartnerOrganization }[];
+}> {
+  const { data } = await api.get<{
+    items: { membershipRole: string; organization: PartnerOrganization }[];
+  }>("/partner/organizations/me");
+  return { items: Array.isArray(data?.items) ? data.items : [] };
+}
+
+/** POST /partner/organizations */
+export async function createPartnerOrganization(
+  body: CreatePartnerOrganizationBody
+): Promise<PartnerOrganization> {
+  const { data } = await api.post<PartnerOrganization>("/partner/organizations", body);
+  return data;
+}
+
+/** PATCH /partner/organizations/:orgId */
+export async function updatePartnerOrganization(
+  orgId: string,
+  body: UpdatePartnerOrganizationBody
+): Promise<PartnerOrganization> {
+  const { data } = await api.patch<PartnerOrganization>(
+    `/partner/organizations/${encodeURIComponent(orgId)}`,
+    body
+  );
+  return data;
+}
+
+/** GET /partner/organizations/:orgId/members */
+export async function getPartnerMembers(
+  orgId: string
+): Promise<{ items: PartnerMembership[]; total: number }> {
+  const { data } = await api.get<{ items: PartnerMembership[]; total: number }>(
+    `/partner/organizations/${encodeURIComponent(orgId)}/members`
+  );
+  return {
+    items: Array.isArray(data?.items) ? data.items : [],
+    total: data?.total ?? 0,
+  };
+}
+
+/** POST /partner/organizations/:orgId/members */
+export async function addPartnerMember(
+  orgId: string,
+  body: { email: string; role: "MANAGER" }
+): Promise<PartnerMembership> {
+  const { data } = await api.post<PartnerMembership>(
+    `/partner/organizations/${encodeURIComponent(orgId)}/members`,
+    body
+  );
+  return data;
+}
+
+/** DELETE /partner/organizations/:orgId/members/:membershipId */
+export async function removePartnerMember(
+  orgId: string,
+  membershipId: string
+): Promise<{ message: string }> {
+  const { data } = await api.delete<{ message: string }>(
+    `/partner/organizations/${encodeURIComponent(orgId)}/members/${encodeURIComponent(membershipId)}`
+  );
+  return data;
+}
+
+// ——— Partner tours (Phase 4C) ———
+
+export type PartnerTourStatus = "DRAFT" | "PUBLISHED" | "ARCHIVED";
+export type PartnerTourModerationStatus =
+  | "NONE"
+  | "SUBMITTED"
+  | "IN_REVIEW"
+  | "NEEDS_CHANGES"
+  | "REJECTED";
+
+export interface PartnerTour {
+  id: string;
+  slug: string;
+  name: string;
+  shortDescription: string;
+  locationLabel: string;
+  location: string;
+  countryLabel: string;
+  region: string;
+  price: number;
+  duration: string;
+  heroImageUrl: string;
+  operatorsLabel?: string | null;
+  overview: string;
+  story?: string;
+  historicalSignificance?: string;
+  difficulty?: string | null;
+  groupSize?: string | null;
+  bestSeason?: string | null;
+  meetingPoint?: string | null;
+  highlights?: string[];
+  status: PartnerTourStatus;
+  listingKind: string;
+  moderationStatus?: PartnerTourModerationStatus;
+  submittedAt?: string | null;
+  reviewNotes?: string | null;
+  reviewedAt?: string | null;
+  partnerOrganizationId?: string | null;
+  createdByUserId?: string | null;
+  countryId?: string | null;
+  latitude?: number | null;
+  longitude?: number | null;
+  mapLabel?: string | null;
+  images?: { url: string; altText?: string | null; caption?: string | null; sortOrder?: number; isHero?: boolean }[];
+  itineraryDays?: { dayNumber: number; title: string; description: string; sortOrder?: number }[];
+  faqs?: { question: string; answer: string; sortOrder?: number }[];
+  experienceItems?: { title: string; description: string; sortOrder?: number }[];
+  included?: string[];
+  excluded?: string[];
+  relatedStoryIds?: string[];
+  updatedAt?: string;
+  createdAt?: string;
+}
+
+export type PartnerTourBody = {
+  slug: string;
+  name: string;
+  shortDescription: string;
+  locationLabel: string;
+  location: string;
+  countryLabel: string;
+  region: string;
+  price: number;
+  duration: string;
+  heroImageUrl: string;
+  operatorsLabel?: string;
+  overview: string;
+  difficulty?: string;
+  groupSize?: string;
+  bestSeason?: string;
+  meetingPoint?: string;
+  highlights?: string[];
+  status?: "DRAFT" | "ARCHIVED";
+  countryId?: string;
+  latitude?: number;
+  longitude?: number;
+  mapLabel?: string;
+  images?: { url: string; altText?: string; caption?: string; sortOrder?: number; isHero?: boolean }[];
+  itineraryDays?: { dayNumber: number; title: string; description: string; sortOrder?: number }[];
+  faqs?: { question: string; answer: string; sortOrder?: number }[];
+  lineItems?: { kind: "INCLUDED" | "EXCLUDED"; text: string; sortOrder?: number }[];
+  experienceItems?: { title: string; description: string; sortOrder?: number }[];
+};
+
+export async function getPartnerTours(params?: {
+  status?: PartnerTourStatus;
+  moderationStatus?: PartnerTourModerationStatus;
+  page?: number;
+  limit?: number;
+}): Promise<{ items: PartnerTour[]; total: number }> {
+  const { data } = await api.get<{ items: PartnerTour[]; total: number }>("/partner/tours", {
+    params,
+  });
+  return { items: Array.isArray(data?.items) ? data.items : [], total: data?.total ?? 0 };
+}
+
+export async function getPartnerTour(id: string): Promise<PartnerTour> {
+  const { data } = await api.get<PartnerTour>(`/partner/tours/${encodeURIComponent(id)}`);
+  return data;
+}
+
+export async function createPartnerTour(body: PartnerTourBody): Promise<PartnerTour> {
+  const { data } = await api.post<PartnerTour>("/partner/tours", body);
+  return data;
+}
+
+export async function updatePartnerTour(
+  id: string,
+  body: Partial<PartnerTourBody>
+): Promise<PartnerTour> {
+  const { data } = await api.patch<PartnerTour>(
+    `/partner/tours/${encodeURIComponent(id)}`,
+    body
+  );
+  return data;
+}
+
+export async function submitPartnerTour(id: string): Promise<PartnerTour> {
+  const { data } = await api.post<PartnerTour>(
+    `/partner/tours/${encodeURIComponent(id)}/submit`
+  );
+  return data;
+}
+
+export async function withdrawPartnerTour(id: string): Promise<PartnerTour> {
+  const { data } = await api.post<PartnerTour>(
+    `/partner/tours/${encodeURIComponent(id)}/withdraw`
+  );
+  return data;
+}
+
+export async function uploadPartnerImage(file: File): Promise<{ url: string }> {
+  const form = new FormData();
+  form.append("file", file);
+  const { data } = await api.post<{ url: string }>("/partner/upload/image", form, {
+    headers: { "Content-Type": "multipart/form-data" },
+  });
+  return data;
+}
+
+// ——— Partner listing claims (Phase 4F) ———
+
+export type ClaimStatus =
+  | "PENDING"
+  | "NEEDS_INFO"
+  | "APPROVED"
+  | "REJECTED"
+  | "WITHDRAWN";
+
+export interface TourListingClaim {
+  id: string;
+  tourId: string;
+  organizationId: string;
+  submittedByUserId: string;
+  status: ClaimStatus;
+  evidenceNotes: string;
+  evidenceUrls: string[];
+  reviewNotes?: string | null;
+  reviewedByUserId?: string | null;
+  reviewedAt?: string | null;
+  createdAt: string;
+  updatedAt: string;
+  tour?: {
+    id: string;
+    slug: string;
+    name: string;
+    status: string;
+    listingKind: string;
+    partnerOrganizationId?: string | null;
+    locationLabel: string;
+    heroImageUrl: string;
+    shortDescription: string;
+    heritageLinkCounts?: {
+      stories: number;
+      timelines: number;
+      cultures: number;
+      artifacts: number;
+      manuscripts: number;
+    };
+  } | null;
+  organization?: {
+    id: string;
+    name: string;
+    slug: string;
+    status: string;
+    country: string;
+    contactEmail: string;
+  } | null;
+  submittedByUser?: { id: string; name: string; email: string } | null;
+  reviewedByUser?: { id: string; name: string; email: string } | null;
+}
+
+export interface ClaimEligibility {
+  eligible: boolean;
+  reason?: string;
+  message?: string;
+  existingClaimId?: string;
+  existingClaimStatus?: ClaimStatus;
+  organization?: { id: string; name: string; status: string };
+  tour?: {
+    id: string;
+    slug: string;
+    name: string;
+    listingKind: string;
+    status: string;
+    partnerOrganizationId?: string | null;
+  };
+}
+
+export async function getClaimEligibility(
+  tourIdOrSlug: string
+): Promise<ClaimEligibility> {
+  const { data } = await api.get<ClaimEligibility>(
+    `/partner/claims/eligibility/${encodeURIComponent(tourIdOrSlug)}`
+  );
+  return data;
+}
+
+export async function getPartnerClaims(params?: {
+  status?: ClaimStatus;
+  page?: number;
+  limit?: number;
+}): Promise<{ items: TourListingClaim[]; total: number }> {
+  const { data } = await api.get<{ items: TourListingClaim[]; total: number }>(
+    "/partner/claims",
+    { params }
+  );
+  return { items: Array.isArray(data?.items) ? data.items : [], total: data?.total ?? 0 };
+}
+
+export async function getPartnerClaim(id: string): Promise<TourListingClaim> {
+  const { data } = await api.get<TourListingClaim>(
+    `/partner/claims/${encodeURIComponent(id)}`
+  );
+  return data;
+}
+
+export async function createTourListingClaim(body: {
+  tourIdOrSlug: string;
+  organizationId?: string;
+  evidenceNotes: string;
+  evidenceUrls?: string[];
+}): Promise<TourListingClaim> {
+  const { data } = await api.post<TourListingClaim>("/partner/claims", body);
+  return data;
+}
+
+export async function resubmitTourListingClaim(
+  id: string,
+  body: { evidenceNotes: string; evidenceUrls?: string[] }
+): Promise<TourListingClaim> {
+  const { data } = await api.patch<TourListingClaim>(
+    `/partner/claims/${encodeURIComponent(id)}/resubmit`,
+    body
+  );
+  return data;
+}
+
+export async function withdrawTourListingClaim(id: string): Promise<TourListingClaim> {
+  const { data } = await api.post<TourListingClaim>(
+    `/partner/claims/${encodeURIComponent(id)}/withdraw`
+  );
+  return data;
 }

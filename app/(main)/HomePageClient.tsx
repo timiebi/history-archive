@@ -6,13 +6,14 @@ import { Hero } from "@/components/home/hero";
 import { RegionNav } from "@/components/home/regionNav";
 import { FeaturedSpotlight } from "@/components/home/stories";
 import { StoryGrid } from "@/components/stories/StoryGrid";
-import { useStories } from "@/lib/api";
+import { TourListingTrustBadge } from "@/components/tourism/TourClaimListingCta";
+import { useStories, useTours } from "@/lib/api";
 import { storyToStoryDisplay } from "@/lib/api/mappers";
 import type { Story } from "@/lib/api/types";
 import { HOME_STORIES_PAGE_SIZE } from "@/lib/home-stories";
 import { ChevronLeft, ChevronRight } from "lucide-react";
-import Link from "next/link";
 import Image from "next/image";
+import Link from "next/link";
 import { useMemo, useState } from "react";
 
 const HOME_STORIES_LIMIT = HOME_STORIES_PAGE_SIZE;
@@ -38,6 +39,9 @@ export function HomePageClient({
     staleTime: page === 1 && initialStories?.items?.length ? 5 * 60 * 1000 : 60 * 1000,
     refetchOnMount: page === 1 && initialStories?.items?.length ? false : undefined,
   });
+
+  const { data: spotlightTours = [], isPending: toursPending } = useTours({ limit: 3 });
+  const homeTours = useMemo(() => spotlightTours.slice(0, 3), [spotlightTours]);
 
   const stories = useMemo(() => {
     if (!isSuccess || !storiesData?.items?.length) return [];
@@ -99,7 +103,8 @@ export function HomePageClient({
                 Walk the Soils of Empires
               </h2>
               <p className="text-stone-600 dark:text-stone-400 font-serif italic text-sm sm:text-base max-w-2xl">
-                Experience heritage first-hand. We collaborate with local historical custodians and booking agencies to offer verified guided itineraries.
+                Experience heritage first-hand. Explore Gesi-curated destinations and verified partner
+                listings, then request guided itineraries with local historical custodians.
               </p>
             </div>
             <Link
@@ -111,73 +116,86 @@ export function HomePageClient({
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            {[
-              {
-                id: "mali",
-                name: "Mud Architecture Trail",
-                desc: "Explore the ancient adobe mosques of Djenné and library reserves of Timbuktu.",
-                dest: "Djenné & Timbuktu, Mali",
-                price: "$1,480",
-                img: "https://images.unsplash.com/photo-1599940824399-b87987ceb72a?q=80&w=600",
-              },
-              {
-                id: "zimbabwe",
-                name: "Stone Citadel Journey",
-                desc: "Stand amongst the massive mortarless granite enclosures of Great Zimbabwe.",
-                dest: "Masvingo, Zimbabwe",
-                price: "$980",
-                img: "https://images.unsplash.com/photo-1600585154340-be6161a56a0c?q=80&w=600",
-              },
-              {
-                id: "egypt",
-                name: "Giza & Nile Antiquity Safari",
-                desc: "Walk the Sphinx temple complexes and navigate the Nile on a traditional felucca.",
-                dest: "Giza, Egypt",
-                price: "$1,150",
-                img: "https://images.unsplash.com/photo-1539650116574-8efeb43e2750?q=80&w=600",
-              }
-            ].map((tour) => (
-              <div key={tour.id} className="group relative flex flex-col bg-white dark:bg-stone-900 border border-stone-200/50 dark:border-stone-850/60 rounded-xl overflow-hidden shadow-xs hover:shadow-lg transition-all duration-300">
-                <div className="relative aspect-video w-full overflow-hidden">
-                  <Image
-                    src={tour.img}
-                    alt={tour.name}
-                    fill
-                    sizes="(max-width: 768px) 100vw, 384px"
-                    className="object-cover group-hover:scale-105 transition-transform duration-700 ease-out"
-                    unoptimized
-                  />
-                  <div className="absolute inset-0 bg-linear-to-t from-stone-950/80 via-transparent to-transparent" />
-                  <div className="absolute bottom-3 left-3 text-white text-[9px] font-mono uppercase tracking-wider flex items-center gap-1">
-                    <span className="text-orange-500">★</span> <span>4.9 ratings</span>
+            {toursPending ? (
+              [1, 2, 3].map((i) => (
+                <div
+                  key={i}
+                  className="rounded-xl border border-stone-200/50 dark:border-stone-850/60 bg-white dark:bg-stone-900 overflow-hidden animate-pulse"
+                >
+                  <div className="aspect-video bg-stone-200 dark:bg-stone-800" />
+                  <div className="p-6 space-y-3">
+                    <div className="h-3 w-24 bg-stone-200 dark:bg-stone-800 rounded" />
+                    <div className="h-5 w-3/4 bg-stone-200 dark:bg-stone-800 rounded" />
+                    <div className="h-3 w-full bg-stone-200 dark:bg-stone-800 rounded" />
                   </div>
                 </div>
-                <div className="p-6 flex-1 flex flex-col justify-between space-y-4">
-                  <div className="space-y-2">
-                    <span className="text-[9px] font-mono font-bold text-stone-500 uppercase tracking-wider block">
-                      {tour.dest}
-                    </span>
-                    <h3 className="text-lg font-black uppercase text-stone-900 dark:text-white leading-tight">
-                      {tour.name}
-                    </h3>
-                    <p className="text-xs text-stone-600 dark:text-stone-400 font-serif italic leading-relaxed line-clamp-2">
-                      {tour.desc}
-                    </p>
-                  </div>
-                  <div className="border-t border-stone-100 dark:border-stone-850/60 pt-4 flex items-center justify-between">
-                    <div className="text-[9px] font-mono uppercase text-stone-500">
-                      From: <span className="text-stone-950 dark:text-white font-bold">{tour.price}</span>
+              ))
+            ) : homeTours.length === 0 ? (
+              <p className="col-span-full text-sm text-stone-500 font-serif italic">
+                No published expeditions yet.{" "}
+                <Link href="/visit" className="text-primary hover:underline">
+                  Browse Tours &amp; Travel
+                </Link>
+              </p>
+            ) : (
+              homeTours.map((tour) => (
+                <div
+                  key={tour.id}
+                  className="group relative flex flex-col bg-white dark:bg-stone-900 border border-stone-200/50 dark:border-stone-850/60 rounded-xl overflow-hidden shadow-xs hover:shadow-lg transition-all duration-300"
+                >
+                  <div className="relative aspect-video w-full overflow-hidden">
+                    {tour.img ? (
+                      <Image
+                        src={tour.img}
+                        alt={tour.name}
+                        fill
+                        sizes="(max-width: 768px) 100vw, 384px"
+                        className="object-cover group-hover:scale-105 transition-transform duration-700 ease-out"
+                        unoptimized
+                      />
+                    ) : (
+                      <div className="absolute inset-0 bg-stone-200 dark:bg-stone-800" />
+                    )}
+                    <div className="absolute inset-0 bg-linear-to-t from-stone-950/80 via-transparent to-transparent" />
+                    <div className="absolute top-3 left-3">
+                      <TourListingTrustBadge listingKind={tour.listingKind} />
                     </div>
-                    <Link
-                      href={`/visit?tour=${tour.id}`}
-                      className="text-[9px] font-mono font-black uppercase tracking-widest text-primary hover:text-orange-850 dark:hover:text-orange-400 flex items-center gap-1"
-                    >
-                      <span>Book Tour</span> &rarr;
-                    </Link>
+                    {tour.rating ? (
+                      <div className="absolute bottom-3 left-3 text-white text-[9px] font-mono uppercase tracking-wider flex items-center gap-1">
+                        <span className="text-orange-500">★</span> <span>{tour.rating}</span>
+                      </div>
+                    ) : null}
+                  </div>
+                  <div className="p-6 flex-1 flex flex-col justify-between space-y-4">
+                    <div className="space-y-2">
+                      <span className="text-[9px] font-mono font-bold text-stone-500 uppercase tracking-wider block">
+                        {tour.dest}
+                      </span>
+                      <h3 className="text-lg font-black uppercase text-stone-900 dark:text-white leading-tight">
+                        {tour.name}
+                      </h3>
+                      <p className="text-xs text-stone-600 dark:text-stone-400 font-serif italic leading-relaxed line-clamp-2">
+                        {tour.desc}
+                      </p>
+                    </div>
+                    <div className="border-t border-stone-100 dark:border-stone-850/60 pt-4 flex items-center justify-between">
+                      <div className="text-[9px] font-mono uppercase text-stone-500">
+                        From:{" "}
+                        <span className="text-stone-950 dark:text-white font-bold">
+                          ${tour.price.toLocaleString()}
+                        </span>
+                      </div>
+                      <Link
+                        href={`/visit/${tour.slug}`}
+                        className="text-[9px] font-mono font-black uppercase tracking-widest text-primary hover:text-orange-850 dark:hover:text-orange-400 flex items-center gap-1"
+                      >
+                        <span>View expedition</span> &rarr;
+                      </Link>
+                    </div>
                   </div>
                 </div>
-              </div>
-            ))}
+              ))
+            )}
           </div>
         </div>
       </section>

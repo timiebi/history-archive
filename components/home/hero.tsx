@@ -1,10 +1,11 @@
 "use client";
 
-import { motion, AnimatePresence } from "framer-motion";
+import { useTours } from "@/lib/api";
+import { AnimatePresence, motion } from "framer-motion";
+import { ArrowRight, Compass, MapPin, Sparkles } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
-import { useEffect, useRef, useState } from "react";
-import { Sparkles, MapPin, Compass, ArrowRight } from "lucide-react";
+import { useEffect, useMemo, useRef, useState } from "react";
 
 const HERO_IMG = "/hero-home.png";
 const EMPIRES = ["Kingdom of Mali", "Aksumite Empire", "Kingdom of Kush", "Songhai Empire", "Great Zimbabwe"];
@@ -36,6 +37,9 @@ const itemVariants = {
 export function Hero() {
   const [empireIndex, setEmpireIndex] = useState(0);
   const cardRef = useRef<HTMLDivElement>(null);
+  const { data: tours = [], isPending: toursPending } = useTours({ limit: 20 });
+  /** Featured card = first published tour from the Tourism API (no hardcoded fallbacks). */
+  const featuredTour = useMemo(() => (tours.length ? tours[0] : null), [tours]);
 
   // Rotate empire names
   useEffect(() => {
@@ -72,7 +76,7 @@ export function Hero() {
       card.removeEventListener("mousemove", handleMouseMove);
       card.removeEventListener("mouseleave", handleMouseLeave);
     };
-  }, []);
+  }, [featuredTour?.id]);
 
   return (
     <section className="relative min-h-[90vh] lg:min-h-screen w-full flex items-center justify-center overflow-hidden bg-stone-950 pt-24 lg:pt-0">
@@ -131,7 +135,7 @@ export function Hero() {
               variants={itemVariants}
               className="text-stone-300 dark:text-stone-400 font-serif text-base sm:text-lg lg:text-xl max-w-xl leading-relaxed"
             >
-              The digital gateway to Africa's sovereign records and heritage sites. Journey through verified histories, interactive timelines, and bookable guided excursions led by local custodians.
+              The digital gateway to Africa&apos;s sovereign records and heritage sites. Journey through verified histories, interactive timelines, and bookable guided excursions led by local custodians.
             </motion.p>
 
             <motion.div
@@ -152,7 +156,7 @@ export function Hero() {
               >
                 <span className="relative z-10 flex items-center gap-2">
                   <Compass size={12} className="animate-spin-slow" />
-                  <span>Book Heritage Tours</span>
+                  <span>Explore heritage tours</span>
                 </span>
                 <span className="absolute inset-0 bg-white/5 translate-x-full group-hover:translate-x-0 transition-transform duration-300 pointer-events-none" />
               </Link>
@@ -168,65 +172,86 @@ export function Hero() {
             transition={{ delay: 0.4, type: "spring" }}
             className="w-full max-w-sm"
           >
-            <div
-              ref={cardRef}
-              className="relative w-full aspect-[4/5] bg-stone-900/60 backdrop-blur-lg border border-white/10 p-5 rounded-2xl shadow-2xl transition-all duration-200 ease-out flex flex-col justify-between overflow-hidden group/card cursor-pointer"
-            >
-              {/* Card Image Cover background */}
-              <div className="absolute inset-0 z-0">
-                <Image
-                  src="https://images.unsplash.com/photo-1547471080-7cc2caa01a7e?q=80&w=800"
-                  alt="Lalibela Rock Churches"
-                  fill
-                  className="object-cover opacity-35 group-hover/card:scale-105 transition-transform duration-700 ease-out"
-                />
-                <div className="absolute inset-0 bg-linear-to-t from-stone-950 via-stone-950/40 to-transparent" />
-              </div>
+            {toursPending ? (
+              <div className="relative w-full aspect-[4/5] rounded-2xl border border-white/10 bg-stone-900/60 animate-pulse" />
+            ) : featuredTour ? (
+              <div
+                ref={cardRef}
+                className="relative w-full aspect-[4/5] bg-stone-900/60 backdrop-blur-lg border border-white/10 p-5 rounded-2xl shadow-2xl transition-all duration-200 ease-out flex flex-col justify-between overflow-hidden group/card cursor-pointer"
+              >
+                <div className="absolute inset-0 z-0">
+                  {featuredTour.img ? (
+                    <Image
+                      src={featuredTour.img}
+                      alt={featuredTour.name}
+                      fill
+                      className="object-cover opacity-35 group-hover/card:scale-105 transition-transform duration-700 ease-out"
+                      unoptimized
+                    />
+                  ) : null}
+                  <div className="absolute inset-0 bg-linear-to-t from-stone-950 via-stone-950/40 to-transparent" />
+                </div>
 
-              {/* Card Top Ribbon */}
-              <div className="relative z-10 flex items-center justify-between">
-                <span className="bg-orange-850 text-white text-[8px] font-mono font-black tracking-widest uppercase px-2.5 py-1 rounded-sm">
-                  Recommended Tour
+                <div className="relative z-10 flex items-center justify-between">
+                  <span className="bg-orange-850 text-white text-[8px] font-mono font-black tracking-widest uppercase px-2.5 py-1 rounded-sm">
+                    Recommended Tour
+                  </span>
+                  {featuredTour.rating ? (
+                    <div className="flex items-center gap-1 text-amber-400 font-mono text-[9px] font-black">
+                      <span>★</span> <span>{featuredTour.rating}</span>
+                    </div>
+                  ) : null}
+                </div>
+
+                <div className="relative z-10 space-y-4 pt-16">
+                  <div className="space-y-1.5">
+                    <div className="flex items-center gap-1 text-stone-300 text-[9px] font-mono uppercase tracking-wider">
+                      <MapPin size={10} className="text-orange-500" />
+                      <span>{featuredTour.dest}</span>
+                    </div>
+                    <h3 className="text-xl md:text-2xl font-black uppercase text-white leading-tight">
+                      {featuredTour.name}
+                    </h3>
+                    <p className="text-[11px] text-stone-400 font-serif italic line-clamp-2 leading-relaxed">
+                      {featuredTour.desc}
+                    </p>
+                  </div>
+
+                  <div className="border-t border-white/10 pt-3 flex items-center justify-between">
+                    <div className="text-[9px] font-mono uppercase tracking-widest text-stone-400">
+                      Duration: <span className="text-white">{featuredTour.duration}</span>
+                    </div>
+                    <div className="text-xs font-mono font-black text-white">
+                      ${featuredTour.price.toLocaleString()}{" "}
+                      <span className="text-[9px] font-normal text-stone-400">/ person</span>
+                    </div>
+                  </div>
+
+                  <Link
+                    href={`/visit/${featuredTour.slug}`}
+                    className="w-full py-3 bg-linear-to-r from-amber-700 to-orange-800 text-white font-mono text-[9px] font-black uppercase tracking-widest rounded-lg flex items-center justify-center gap-2 hover:shadow-[0_0_15px_rgba(249,115,22,0.25)] transition-all cursor-pointer"
+                  >
+                    <span>View expedition</span>
+                    <ArrowRight size={10} />
+                  </Link>
+                </div>
+              </div>
+            ) : (
+              <Link
+                href="/visit"
+                className="relative w-full aspect-[4/5] rounded-2xl border border-white/10 bg-stone-900/60 backdrop-blur-lg p-6 flex flex-col justify-end gap-3 hover:border-white/25 transition"
+              >
+                <span className="text-[8px] font-mono font-black tracking-widest uppercase text-orange-500">
+                  Tours &amp; Travel
                 </span>
-                <div className="flex items-center gap-1 text-amber-400 font-mono text-[9px] font-black">
-                  <span>★</span> <span>4.9</span>
-                </div>
-              </div>
-
-              {/* Card Bottom Meta */}
-              <div className="relative z-10 space-y-4 pt-16">
-                <div className="space-y-1.5">
-                  <div className="flex items-center gap-1 text-stone-300 text-[9px] font-mono uppercase tracking-wider">
-                    <MapPin size={10} className="text-orange-500" />
-                    <span>Lalibela, Ethiopia</span>
-                  </div>
-                  <h3 className="text-xl md:text-2xl font-black uppercase text-white leading-tight">
-                    Stone Churches <br />
-                    of Lalibela
-                  </h3>
-                  <p className="text-[11px] text-stone-400 font-serif italic line-clamp-2 leading-relaxed">
-                    Explore the 11 medieval rock-hewn monolithic churches carved directly from volcanic stone.
-                  </p>
-                </div>
-
-                <div className="border-t border-white/10 pt-3 flex items-center justify-between">
-                  <div className="text-[9px] font-mono uppercase tracking-widest text-stone-400">
-                    Duration: <span className="text-white">6 Days</span>
-                  </div>
-                  <div className="text-xs font-mono font-black text-white">
-                    $1,250 <span className="text-[9px] font-normal text-stone-400">/ person</span>
-                  </div>
-                </div>
-
-                <Link
-                  href="/visit?tour=lalibela"
-                  className="w-full py-3 bg-linear-to-r from-amber-700 to-orange-800 text-white font-mono text-[9px] font-black uppercase tracking-widest rounded-lg flex items-center justify-center gap-2 hover:shadow-[0_0_15px_rgba(249,115,22,0.25)] transition-all cursor-pointer"
-                >
-                  <span>Book Experience</span>
-                  <ArrowRight size={10} />
-                </Link>
-              </div>
-            </div>
+                <h3 className="text-xl font-black uppercase text-white leading-tight">
+                  Explore heritage expeditions
+                </h3>
+                <span className="inline-flex items-center gap-2 text-[9px] font-mono font-black uppercase tracking-widest text-white">
+                  Browse tours <ArrowRight size={10} />
+                </span>
+              </Link>
+            )}
           </motion.div>
         </div>
       </div>
