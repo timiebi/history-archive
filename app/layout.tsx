@@ -1,9 +1,9 @@
 import { RootChrome } from "@/components/layouts/RootChrome";
 import { QueryProvider } from "@/components/providers/QueryProvider";
 import { ThemeProvider } from "@/components/providers/themeProviders";
-import type { Metadata, Viewport } from "next";
 import { GeistMono } from "geist/font/mono";
 import { GeistSans } from "geist/font/sans";
+import type { Metadata, Viewport } from "next";
 import { Source_Serif_4 } from "next/font/google";
 import "./globals.css";
 

@@ -1,13 +1,12 @@
 import { ChevronLeft } from "lucide-react";
-import Link from "next/link";
+import { BrandHomeLink } from "@/components/layouts/BrandHomeLink";
 
 export default function AuthLayout({ children }: { children: React.ReactNode }) {
   return (
     <div className="min-h-screen bg-stone-50 dark:bg-[#0c0a09] flex flex-col lg:flex-row transition-colors duration-500 relative">
       
-      {/* BACK TO HOME BUTTON */}
-      <Link 
-        href="/" 
+      {/* BACK TO HOME BUTTON — marketing if logged out, app home if logged in */}
+      <BrandHomeLink 
         className="absolute top-8 left-8 z-100 flex items-center gap-2 group transition-colors"
       >
         <div className="p-2 border border-stone-200 dark:border-stone-800 bg-white/50 dark:bg-stone-900/50 backdrop-blur-sm group-hover:border-orange-700 transition-colors">
@@ -16,7 +15,7 @@ export default function AuthLayout({ children }: { children: React.ReactNode }) 
         <span className="text-[10px] font-black uppercase tracking-[0.2em] text-stone-500 group-hover:text-stone-900 dark:group-hover:text-white transition-colors">
           Back to Home
         </span>
-      </Link>
+      </BrandHomeLink>
 
       {/* LEFT SIDE: THE ARTWORK/STORY */}
       <div className="hidden lg:flex lg:w-1/2 relative bg-stone-900 overflow-hidden">
@@ -33,7 +32,7 @@ export default function AuthLayout({ children }: { children: React.ReactNode }) 
              </h2>
           </div>
           <p className="text-stone-400 font-serif italic text-lg max-w-sm">
-            "History is not merely what happened, but what we preserve."
+            &ldquo;History is not merely what happened, but what we preserve.&rdquo;
           </p>
         </div>
       </div>
