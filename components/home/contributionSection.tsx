@@ -19,22 +19,22 @@ export function ContributionSection({ initialContributors }: { initialContributo
     <section className="relative py-32 bg-[#0c0a09] text-stone-100 overflow-hidden">
       {/* Background Texture - Subtle African Motif */}
       <div className="absolute inset-0 opacity-8 bg-[url('/patterns/mudcloth.png')] bg-repeat pointer-events-none select-none z-0" />
-      
+
       {/* Ambient gold radial glow */}
       <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-140 h-140 rounded-full bg-linear-to-br from-amber-600/5 to-orange-700/5 blur-3xl pointer-events-none select-none z-0" />
-      
+
       <div className="relative z-10 max-w-5xl mx-auto px-6 text-center">
         <div className="mb-12 inline-block">
           <div className="h-20 w-px bg-linear-to-b from-transparent via-orange-700/60 to-transparent mx-auto" />
         </div>
-        
+
         <h2 className="text-4xl md:text-6xl font-black uppercase italic tracking-tighter mb-8 leading-tight text-white select-none">
           Every Tribe has a <span className="text-transparent bg-clip-text bg-linear-to-r from-amber-400 to-orange-500 font-extrabold italic">Voice.</span> <br />
           Every Village a <span className="text-transparent bg-clip-text bg-linear-to-r from-amber-400 to-orange-500 font-extrabold italic">Story.</span>
         </h2>
-        
+
         <p className="text-stone-400 font-serif text-lg md:text-xl max-w-2xl mx-auto mb-14 leading-relaxed">
-          The Great Library of the Continent is never finished. We invite historians, elders, and 
+          The Great Library of the Continent is never finished. We invite historians, elders, and
           storytellers to contribute their verified records to Gesi.
         </p>
 

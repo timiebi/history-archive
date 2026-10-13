@@ -229,41 +229,56 @@ export default function ContributePage() {
     );
   }
 
+  const labelClass =
+    "text-[10px] font-mono font-bold uppercase tracking-[0.2em] text-stone-500";
+  const fieldClass =
+    "w-full rounded-sm bg-white dark:bg-stone-950 border border-stone-200 dark:border-stone-700 py-3 px-4 font-mono text-sm text-stone-900 dark:text-stone-100 focus:outline-none focus:ring-2 focus:ring-[#c2410c] focus:border-[#c2410c]";
+  const inputClass =
+    "rounded-sm border-stone-200 dark:border-stone-700 bg-white dark:bg-stone-950 h-11 font-mono text-stone-900 dark:text-stone-100 focus-visible:ring-2 focus-visible:ring-[#c2410c]";
+
   return (
-    <main className="min-h-screen bg-[#fafaf9] dark:bg-[#0c0a09] py-24">
+    <main className="min-h-screen bg-[#ebe4da] dark:bg-[#0c0a09] py-24">
       <div className="max-w-2xl mx-auto px-6">
-        <motion.div initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.2 }} className="mb-12">
+        <motion.div initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.2 }} className="mb-10">
           <div className="flex items-center gap-2 mb-4">
-            <PenLine size={14} className="text-orange-700" />
-            <span className="text-orange-700 font-mono text-[10px] uppercase tracking-[0.3em]">Contributor</span>
+            <PenLine size={14} className="text-[#c2410c]" />
+            <span className="text-[#c2410c] font-mono text-[10px] uppercase tracking-[0.3em]">Contributor</span>
           </div>
           <h1 className="text-5xl font-black uppercase italic tracking-tighter text-stone-900 dark:text-white leading-tight">
-            Submit a <span className="text-orange-800">Story</span>
+            Submit a <span className="text-[#c2410c]">Story</span>
           </h1>
-          <p className="text-stone-500 mt-4 font-serif italic">Add a verified record to Gesi. A cover image is required; you can add optional sections (text + image per section) so your story displays like featured articles—text then image in flow.</p>
+          <p className="text-stone-600 dark:text-stone-400 mt-4 font-serif italic">Add a verified record to Gesi. A cover image is required; you can add optional sections (text + image per section) so your story displays like featured articles—text then image in flow.</p>
         </motion.div>
 
-        <motion.form initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.2 }} className="space-y-6" method="post" onSubmit={(e) => { e.preventDefault(); void onSubmit(e); }} noValidate>
+        <motion.form
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ duration: 0.2 }}
+          className="space-y-6 rounded-sm border border-stone-200/90 dark:border-stone-800 bg-[#fafaf9] dark:bg-stone-950/80 p-6 sm:p-8 shadow-[0_25px_50px_-12px_rgba(28,25,23,0.12)]"
+          method="post"
+          onSubmit={(e) => { e.preventDefault(); void onSubmit(e); }}
+          noValidate
+        >
           {createStory.isError && (
-            <p className="text-[10px] font-mono uppercase text-red-600 dark:text-red-400 bg-red-50 dark:bg-red-950/50 px-3 py-2">
+            <p className="text-[10px] font-mono uppercase text-red-600 dark:text-red-400 bg-red-50 dark:bg-red-950/50 px-3 py-2 rounded-sm">
               {createStory.error?.message}
             </p>
           )}
 
           {/* ——— Timeline & place (optional) ——— */}
-          <div className="border border-stone-200 dark:border-stone-800 p-6 space-y-6">
+          <div className="rounded-sm border border-stone-200 dark:border-stone-800 bg-white/70 dark:bg-stone-900/40 p-6 space-y-6">
             <div className="flex items-center gap-2">
-              <Clock size={14} className="text-orange-700" />
-              <span className="text-orange-700 font-mono text-[10px] uppercase tracking-[0.3em]">Time & place</span>
+              <Clock size={14} className="text-[#c2410c]" />
+              <span className="text-[#c2410c] font-mono text-[10px] uppercase tracking-[0.3em]">Time & place</span>
             </div>
             <p className="text-stone-500 text-xs">Link this story to a period and place. Optional—you can leave this blank or attach to an existing timeline.</p>
 
             <div className="space-y-1.5">
-              <label className="text-[10px] font-black uppercase tracking-widest text-stone-400">Where does this story take place? (optional)</label>
+              <label className={labelClass}>Where does this story take place? (optional)</label>
               <select
                 value={countryId}
                 onChange={(e) => setCountryId(e.target.value)}
-                className="w-full bg-transparent border border-stone-200 dark:border-stone-800 py-3 px-4 font-mono text-sm focus:border-orange-800 outline-none"
+                className={fieldClass}
               >
                 <option value="">Select country / region</option>
                 {countries.map((c) => (
@@ -273,7 +288,7 @@ export default function ContributePage() {
             </div>
 
             <div className="space-y-3">
-              <label className="text-[10px] font-black uppercase tracking-widest text-stone-400">Timeline</label>
+              <label className={labelClass}>Timeline</label>
               <div className="flex flex-wrap gap-4">
                 <label className="flex items-center gap-2 cursor-pointer">
                   <input type="radio" name="timelineMode" checked={timelineMode === "none"} onChange={() => setTimelineMode("none")} className="rounded border-stone-300" />
@@ -293,7 +308,7 @@ export default function ContributePage() {
                 <select
                   value={timelineId}
                   onChange={(e) => setTimelineId(e.target.value)}
-                  className="w-full bg-transparent border border-stone-200 dark:border-stone-800 py-3 px-4 font-mono text-sm focus:border-orange-800 outline-none mt-2"
+                  className={`${fieldClass} mt-2`}
                 >
                   <option value="">Choose a timeline</option>
                   {timelines.map((t) => (
@@ -308,42 +323,42 @@ export default function ContributePage() {
               {timelineMode === "new" && (
                 <div className="space-y-4 mt-4 p-4 border border-stone-200 dark:border-stone-800 bg-stone-50/50 dark:bg-stone-900/20">
                   <div className="space-y-1.5">
-                    <label className="text-[10px] font-black uppercase tracking-widest text-stone-400">Timeline name *</label>
+                    <label className={labelClass}>Timeline name *</label>
                     <Input
                       value={timelineName}
                       onChange={(e) => setTimelineName(e.target.value)}
                       placeholder="e.g. Great Zimbabwe Peak Era"
-                      className="rounded-none border-stone-200 dark:border-stone-800 bg-transparent h-10 font-mono"
+                      className={inputClass}
                     />
                   </div>
                   <div className="space-y-1.5">
-                    <label className="text-[10px] font-black uppercase tracking-widest text-stone-400">Short description (optional)</label>
+                    <label className={labelClass}>Short description (optional)</label>
                     <Input
                       value={timelineDescription}
                       onChange={(e) => setTimelineDescription(e.target.value)}
                       placeholder="Brief context for this period"
-                      className="rounded-none border-stone-200 dark:border-stone-800 bg-transparent h-10 font-mono"
+                      className={inputClass}
                     />
                   </div>
                   <div className="grid grid-cols-2 gap-4">
                     <div className="space-y-1.5">
-                      <label className="text-[10px] font-black uppercase tracking-widest text-stone-400">Start year * (negative = BCE)</label>
+                      <label className={labelClass}>Start year * (negative = BCE)</label>
                       <Input
                         type="number"
                         value={timelineStartYear}
                         onChange={(e) => setTimelineStartYear(e.target.value)}
                         placeholder="-500 or 1324"
-                        className="rounded-none border-stone-200 dark:border-stone-800 bg-transparent h-10 font-mono"
+                        className={inputClass}
                       />
                     </div>
                     <div className="space-y-1.5">
-                      <label className="text-[10px] font-black uppercase tracking-widest text-stone-400">End year (optional)</label>
+                      <label className={labelClass}>End year (optional)</label>
                       <Input
                         type="number"
                         value={timelineEndYear}
                         onChange={(e) => setTimelineEndYear(e.target.value)}
                         placeholder="-200 or 1400"
-                        className="rounded-none border-stone-200 dark:border-stone-800 bg-transparent h-10 font-mono"
+                        className={inputClass}
                       />
                     </div>
                   </div>
@@ -353,12 +368,12 @@ export default function ContributePage() {
           </div>
 
           <div className="space-y-1.5">
-            <label className="text-[10px] font-black uppercase tracking-widest text-stone-400">Category *</label>
+            <label className={labelClass}>Category *</label>
             <select
               value={categoryName}
               onChange={(e) => setCategoryName(e.target.value)}
               required
-              className="w-full bg-transparent border border-stone-200 dark:border-stone-800 py-3 px-4 font-mono text-sm focus:border-orange-800 outline-none"
+              className={fieldClass}
               aria-invalid={submitAttempted && !categoryName.trim() ? "true" : undefined}
             >
               <option value="">Select category</option>
@@ -372,12 +387,12 @@ export default function ContributePage() {
           </div>
 
           <div className="space-y-1.5">
-            <label className="text-[10px] font-black uppercase tracking-widest text-stone-400">Title *</label>
+            <label className={labelClass}>Title *</label>
             <Input
               value={title}
               onChange={(e) => setTitle(e.target.value)}
               placeholder="e.g. The Golden Age of the Mali Empire"
-              className="rounded-none border-stone-200 dark:border-stone-800 bg-transparent h-12 font-mono"
+              className={`${inputClass} h-12`}
               required
               maxLength={300}
               aria-invalid={submitAttempted && !title.trim() ? "true" : undefined}
@@ -412,13 +427,13 @@ export default function ContributePage() {
           </div>
 
           <div className="space-y-1.5">
-            <label className="text-[10px] font-black uppercase tracking-widest text-stone-400">Content * (or use sections below)</label>
+            <label className={labelClass}>Content * (or use sections below)</label>
             <textarea
               value={content}
               onChange={(e) => setContent(e.target.value)}
               placeholder="Single block of text, or leave empty and add sections below for multiple parts with images"
               rows={6}
-              className="w-full bg-transparent border border-stone-200 dark:border-stone-800 py-3 px-4 font-mono text-sm focus:border-orange-800 outline-none resize-y"
+              className={`${fieldClass} resize-y`}
               required={!useSectionsForSubmit}
               aria-invalid={submitAttempted && !content.trim() && !useSectionsForSubmit ? "true" : undefined}
             />
@@ -432,14 +447,14 @@ export default function ContributePage() {
 
           <div className="border-t border-stone-200 dark:border-stone-800 pt-8 space-y-6">
             <div className="flex items-center justify-between">
-              <label className="text-[10px] font-black uppercase tracking-widest text-stone-400">Sections (optional)</label>
+              <label className={labelClass}>Sections (optional)</label>
               <Button type="button" variant="outline" size="sm" onClick={addSection} className="rounded-none text-[10px] gap-1">
                 <Plus size={12} /> Add section
               </Button>
             </div>
             <p className="text-stone-500 text-xs">Add as many sections as you need. Each can have text and an optional image. They’ll appear as text first, then image—like a short article.</p>
             {sections.map((sec, i) => (
-              <div key={i} className="p-4 border border-stone-200 dark:border-stone-800 space-y-3">
+              <div key={i} className="p-4 rounded-sm border border-stone-200 dark:border-stone-800 bg-white/60 dark:bg-stone-900/30 space-y-3">
                 <div className="flex justify-between items-center">
                   <span className="text-[10px] font-mono text-stone-500">Section {i + 1}</span>
                   <button type="button" onClick={() => removeSection(i)} className="text-stone-400 hover:text-red-600 p-1 cursor-pointer min-w-[32px] min-h-[32px] flex items-center justify-center" aria-label={`Remove section ${i + 1}`}>
@@ -451,7 +466,7 @@ export default function ContributePage() {
                   onChange={(e) => updateSection(i, "text", e.target.value)}
                   placeholder="Section text…"
                   rows={4}
-                  className="w-full bg-transparent border border-stone-200 dark:border-stone-800 py-2 px-3 font-mono text-sm focus:border-orange-800 outline-none resize-y"
+                  className={`${fieldClass} resize-y`}
                 />
                 <CloudinaryImageUpload
                   value={sec.image ?? ""}
@@ -465,12 +480,12 @@ export default function ContributePage() {
           </div>
 
           <div className="space-y-1.5">
-            <label className="text-[10px] font-black uppercase tracking-widest text-stone-400">Source URL (optional)</label>
+            <label className={labelClass}>Source URL (optional)</label>
             <Input
               value={sourceUrl}
               onChange={(e) => setSourceUrl(e.target.value)}
               placeholder="https://…"
-              className="rounded-none border-stone-200 dark:border-stone-800 bg-transparent h-12 font-mono"
+              className={`${inputClass} h-12`}
             />
           </div>
 
@@ -487,7 +502,7 @@ export default function ContributePage() {
               (useSectionsForSubmit && sections.filter((s) => s.text.trim()).length === 0) ||
               (timelineMode === "new" && (!timelineName.trim() || !timelineStartYear.trim() || Number.isNaN(parseInt(timelineStartYear.trim(), 10))))
             }
-            className="w-full h-14 cursor-pointer rounded-none font-black uppercase tracking-[0.2em] text-[10px] hover:bg-orange-800 dark:hover:bg-orange-600 disabled:cursor-not-allowed"
+            className="w-full h-14 cursor-pointer rounded-sm bg-[#c2410c] hover:bg-[#9a3412] text-white font-mono font-bold uppercase tracking-[0.2em] text-[10px] disabled:cursor-not-allowed disabled:opacity-60"
           >
             {uploadingImages ? "Uploading images…" : createStory.isPending ? "Submitting…" : "Submit to Gesi"}
           </Button>

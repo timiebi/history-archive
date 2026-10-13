@@ -42,21 +42,21 @@ export function FeaturedSpotlight({ story }: { story?: FeaturedStory | null }) {
               />
             </div>
           </div>
-          
+
           <div className="lg:col-span-5 space-y-6">
             <div className="inline-flex items-center gap-2 text-orange-800 dark:text-orange-500 font-extrabold text-[10px] uppercase tracking-[0.25em]">
               <span className="w-8 h-px bg-current" />
               Featured Exhibition · <span className="text-stone-500 font-medium">{sourceLabel}</span>
             </div>
-            
+
             <h2 className="text-4xl md:text-5xl font-black uppercase tracking-tighter italic leading-[0.9] text-stone-950 dark:text-white">
               {title}
             </h2>
-            
+
             <p className="font-serif text-lg text-stone-600 dark:text-stone-400 italic line-clamp-4 leading-relaxed">
               &quot;{excerpt.slice(0, 200)}{excerpt.length > 200 ? "…" : ""}&quot;
             </p>
-            
+
             <Link
               href={href}
               className="pt-4 inline-flex items-center gap-4 group font-black uppercase text-[10px] tracking-[0.25em] text-orange-850 dark:text-orange-400 cursor-pointer"

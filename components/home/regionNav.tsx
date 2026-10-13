@@ -70,7 +70,7 @@ export function RegionNav() {
                   <span className="text-[10px] font-mono font-black uppercase tracking-widest text-primary">
                     {region.name}
                   </span>
-                  
+
                   {/* Local Tour Count Badge */}
                   <span className="inline-flex items-center gap-1 bg-amber-500/10 dark:bg-amber-500/5 text-amber-800 dark:text-orange-400 font-mono text-[8px] font-extrabold px-2 py-0.5 rounded-full border border-amber-500/20">
                     <Compass size={8} className="animate-spin-slow text-amber-600" />
@@ -82,14 +82,14 @@ export function RegionNav() {
                   {region.subtitle}
                 </p>
               </div>
-              
+
               <div className="text-[9px] font-mono font-black uppercase tracking-widest text-stone-400 group-hover:text-primary dark:group-hover:text-orange-400 transition-colors pt-4 flex items-center gap-1.5">
                 <span>View Expeditions</span>
                 <span className="transform group-hover:translate-x-1 transition-transform duration-300">&rarr;</span>
               </div>
 
               <span className="sr-only">Opens tours filtered by region: {region.storiesQuery}</span>
-              
+
               {/* Animated Bottom Highlight Border */}
               <div className="absolute bottom-0 left-1/2 -translate-x-1/2 h-0.75 w-0 bg-primary transition-all duration-300 group-hover:w-11/12 rounded-t-full" />
             </Link>

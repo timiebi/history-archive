@@ -33,7 +33,7 @@ function LoginForm() {
           localStorage.setItem(AUTH_TOKEN_KEY, res.token);
           if (res.user) localStorage.setItem(AUTH_USER_KEY, JSON.stringify(res.user));
         }
-        const target = isSafeRedirect(redirectParam) ? redirectParam : "/";
+        const target = isSafeRedirect(redirectParam) ? redirectParam : "/explore";
         router.push(target);
       }
     },

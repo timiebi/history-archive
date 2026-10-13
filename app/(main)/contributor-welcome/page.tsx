@@ -89,7 +89,7 @@ function ContributorWelcomeInner() {
           </Link>
         </div>
         <Link
-          href="/"
+          href="/explore"
           className="inline-block font-mono text-[10px] uppercase tracking-widest text-stone-500 hover:text-orange-700 dark:hover:text-orange-400"
         >
           Continue to home

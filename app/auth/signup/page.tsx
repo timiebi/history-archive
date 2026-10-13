@@ -36,7 +36,7 @@ function SignUpForm() {
         }
         const pendingContributor =
           res.user?.role === "CONTRIBUTOR" && res.user?.status === "PENDING";
-        router.push(pendingContributor ? "/contributor-welcome" : "/");
+        router.push(pendingContributor ? "/contributor-welcome" : "/explore");
       }
     },
     onError: () => {},

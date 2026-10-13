@@ -79,7 +79,7 @@ export default function DashboardLayout({
           Dashboard
         </Link>
         <Link
-          href="/"
+          href="/explore"
           className="mt-2 flex items-center gap-2 font-mono text-[10px] uppercase tracking-widest text-stone-500 hover:text-orange-700 dark:hover:text-orange-400"
           onClick={() => setMobileOpen(false)}
         >
@@ -145,7 +145,7 @@ export default function DashboardLayout({
           Dashboard
         </Link>
         <Link
-          href="/"
+          href="/explore"
           className="text-stone-500 font-mono text-[10px] uppercase tracking-widest hover:text-orange-700 flex items-center gap-1"
         >
           <ExternalLink size={14} aria-hidden /> Site

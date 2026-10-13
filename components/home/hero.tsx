@@ -1,14 +1,13 @@
 "use client";
 
 import { useTours } from "@/lib/api";
-import { AnimatePresence, motion } from "framer-motion";
+import { motion } from "framer-motion";
 import { ArrowRight, Compass, MapPin, Sparkles } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef } from "react";
 
 const HERO_IMG = "/hero-home.png";
-const EMPIRES = ["Kingdom of Mali", "Aksumite Empire", "Kingdom of Kush", "Songhai Empire", "Great Zimbabwe"];
 
 const containerVariants = {
   hidden: { opacity: 0 },
@@ -35,19 +34,10 @@ const itemVariants = {
 } as const;
 
 export function Hero() {
-  const [empireIndex, setEmpireIndex] = useState(0);
   const cardRef = useRef<HTMLDivElement>(null);
   const { data: tours = [], isPending: toursPending } = useTours({ limit: 20 });
   /** Featured card = first published tour from the Tourism API (no hardcoded fallbacks). */
   const featuredTour = useMemo(() => (tours.length ? tours[0] : null), [tours]);
-
-  // Rotate empire names
-  useEffect(() => {
-    const timer = setInterval(() => {
-      setEmpireIndex((prev) => (prev + 1) % EMPIRES.length);
-    }, 3200);
-    return () => clearInterval(timer);
-  }, []);
 
   // Soft mouse-tracking parallax on the featured tour card
   useEffect(() => {
@@ -58,10 +48,10 @@ export function Hero() {
       const rect = card.getBoundingClientRect();
       const x = e.clientX - rect.left - rect.width / 2;
       const y = e.clientY - rect.top - rect.height / 2;
-      
+
       const rotX = -(y / (rect.height / 2)) * 12;
       const rotY = (x / (rect.width / 2)) * 12;
-      
+
       card.style.transform = `perspective(1000px) rotateX(${rotX}deg) rotateY(${rotY}deg) scale3d(1.02, 1.02, 1.02)`;
     };
 
@@ -71,7 +61,7 @@ export function Hero() {
 
     card.addEventListener("mousemove", handleMouseMove);
     card.addEventListener("mouseleave", handleMouseLeave);
-    
+
     return () => {
       card.removeEventListener("mousemove", handleMouseMove);
       card.removeEventListener("mouseleave", handleMouseLeave);
@@ -110,28 +100,15 @@ export function Hero() {
               </span>
             </motion.div>
 
-            <motion.h1 
-              variants={itemVariants} 
+            <motion.h1
+              variants={itemVariants}
               className="text-[11vw] sm:text-[9vw] lg:text-[5.5vw] font-black uppercase italic tracking-tighter leading-[0.85] text-white drop-shadow-sm"
             >
               Explore the <br />
-              <span className="relative inline-block h-[1.1em] overflow-hidden text-transparent bg-clip-text bg-linear-to-r from-amber-500 to-orange-500 font-extrabold pr-2">
-                <AnimatePresence mode="wait">
-                  <motion.span
-                    key={empireIndex}
-                    initial={{ y: "100%" }}
-                    animate={{ y: 0 }}
-                    exit={{ y: "-100%" }}
-                    transition={{ type: "spring", stiffness: 120, damping: 18 }}
-                    className="absolute left-0 inline-block whitespace-nowrap"
-                  >
-                    {EMPIRES[empireIndex]}
-                  </motion.span>
-                </AnimatePresence>
-              </span>
+              Africa We Inherited
             </motion.h1>
 
-            <motion.p 
+            <motion.p
               variants={itemVariants}
               className="text-stone-300 dark:text-stone-400 font-serif text-base sm:text-lg lg:text-xl max-w-xl leading-relaxed"
             >
@@ -149,7 +126,7 @@ export function Hero() {
                 <span className="relative z-10">Explore Records</span>
                 <span className="absolute inset-0 bg-white/10 translate-y-full group-hover:translate-y-0 transition-transform duration-300 pointer-events-none" />
               </Link>
-              
+
               <Link
                 href="/visit"
                 className="w-full sm:w-auto inline-flex items-center justify-center min-h-[50px] px-8 bg-white/5 border border-white/15 hover:border-white/35 hover:bg-white/10 backdrop-blur-md text-white font-mono text-[10px] font-black uppercase tracking-[0.25em] transition-all duration-300 rounded-lg active:scale-98 cursor-pointer relative group overflow-hidden"

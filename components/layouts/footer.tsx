@@ -38,9 +38,9 @@ export function Footer() {
             <div className="space-y-4">
               <h4 className="text-[10px] font-black uppercase tracking-[0.3em] text-stone-400">Platform</h4>
               <ul className="space-y-2 text-xs font-bold uppercase tracking-widest">
-                <li><a href="#" className="hover:text-orange-800">About</a></li>
-                <li><a href="#" className="hover:text-orange-800">Contribute</a></li>
-                <li><a href="#" className="hover:text-orange-800">Contact</a></li>
+                <li><a href="/welcome" className="hover:text-orange-800">About Gesi</a></li>
+                <li><a href="/contribute" className="hover:text-orange-800">Contribute</a></li>
+                <li><a href="/explore" className="hover:text-orange-800">Explore</a></li>
               </ul>
             </div>
             <div className="space-y-4">

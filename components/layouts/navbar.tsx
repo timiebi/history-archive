@@ -15,6 +15,8 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useCallback, useEffect, useState } from "react";
 import { AppContainer } from "./appContainer";
+import { BrandHomeLink } from "./BrandHomeLink";
+import { APP_HOME } from "@/lib/app-home";
 
 const AUTH_USER_KEY = "archive_user";
 const AUTH_TOKEN_KEY = "archive_token";
@@ -131,7 +133,7 @@ export function Navbar() {
     };
   }, [pathname]);
 
-  const isHome = pathname === "/";
+  const isHome = pathname === "/explore";
   const onTransparentOverHero = isHome && !isScrolled;
   const linkClass = (href: string) =>
     pathname === href
@@ -154,14 +156,14 @@ export function Navbar() {
             isScrolled ? "h-12 sm:h-14" : "h-12 sm:h-14"
           }`}
         >
-          <Link href="/" className="group flex flex-col leading-none shrink-0">
+          <BrandHomeLink className="group flex flex-col leading-none shrink-0">
             <span className={`text-lg sm:text-2xl font-black uppercase italic tracking-tighter transition-colors duration-200 ${onTransparentOverHero ? "text-white group-hover:text-orange-350" : "text-stone-900 dark:text-white group-hover:text-orange-800"}`}>
               Gesi<span className={onTransparentOverHero ? "text-orange-400" : "text-orange-800 dark:text-orange-600"}>.</span>
             </span>
             <span className={`text-[8px] sm:text-[9px] font-bold uppercase tracking-[0.3em] hidden sm:block ${onTransparentOverHero ? "text-stone-400" : "text-stone-500"}`}>
               Truth in Heritage
             </span>
-          </Link>
+          </BrandHomeLink>
 
           <nav className="hidden xl:flex items-center min-w-0 flex-1 justify-center gap-4 2xl:gap-6 overflow-hidden">
             {NAV_LINKS.map((link) => (
@@ -181,7 +183,7 @@ export function Navbar() {
           </nav>
 
           <div className={`flex items-center shrink-0 gap-2 sm:gap-3 ${onTransparentOverHero ? "text-stone-200" : ""}`}>
-            {/* Desktop: single icon opens menu with Dashboard, Enter Archive, Theme, Sign in/out */}
+            {/* Desktop: single icon opens menu with Dashboard, Explore, Theme, Sign in/out */}
             {mounted ? (
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
@@ -217,8 +219,13 @@ export function Navbar() {
                     </>
                   )}
                   <DropdownMenuItem asChild>
-                    <Link href="/artifacts" className="flex items-center gap-2 cursor-pointer">
-                      <Archive size={16} /> Enter Archive
+                    <Link href={APP_HOME} className="flex items-center gap-2 cursor-pointer">
+                      <Archive size={16} /> Explore
+                    </Link>
+                  </DropdownMenuItem>
+                  <DropdownMenuItem asChild>
+                    <Link href="/welcome" className="flex items-center gap-2 cursor-pointer">
+                      <Globe size={16} /> About Gesi
                     </Link>
                   </DropdownMenuItem>
                   {mounted && user && (
@@ -415,6 +422,22 @@ export function Navbar() {
               </Link>
             )}
 
+            <Link
+              href={APP_HOME}
+              onClick={() => setMobileOpen(false)}
+              className="py-3 px-4 text-xs font-mono font-black uppercase tracking-widest text-stone-700 dark:text-stone-300 hover:bg-stone-100/50 dark:hover:bg-stone-900/50 rounded-lg"
+            >
+              Explore
+            </Link>
+
+            <Link
+              href="/welcome"
+              onClick={() => setMobileOpen(false)}
+              className="py-3 px-4 text-xs font-mono font-black uppercase tracking-widest text-stone-700 dark:text-stone-300 hover:bg-stone-100/50 dark:hover:bg-stone-900/50 rounded-lg"
+            >
+              About Gesi
+            </Link>
+
             {canContribute && (
               <Link
                 href="/contribute"
@@ -433,7 +456,7 @@ export function Navbar() {
               }}
               className="py-3 px-4 text-left text-xs font-mono font-black uppercase tracking-widest text-stone-700 dark:text-stone-300 hover:bg-stone-100/50 dark:hover:bg-stone-900/50 rounded-lg transition-colors duration-200 cursor-pointer"
             >
-              Toggle theme: {theme === "dark" ? "Light" : "Dark"}
+              Toggle theme: {mounted && theme === "dark" ? "Light" : "Dark"}
             </button>
 
             {mounted && user ? (
